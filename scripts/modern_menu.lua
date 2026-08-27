@@ -893,16 +893,6 @@ function ModernMenu.Init()
         if btnClose.OnClick then btnClose:OnClick(Close) end
     end
 
-    local txtSearch = Find("txtM2SearchInput")
-    if txtSearch then
-        if txtSearch.RegisterValueChangedCallback then
-            txtSearch:RegisterValueChangedCallback(function(evt)
-                local val = (evt and evt.newValue) or txtSearch.value or txtSearch.text
-                ModernMenu.SearchQuery = tostring(val or "")
-                RefreshLineupsList()
-            end)
-        end
-    end
 
     local filterButtons = {
         { name = "btnM2FilterAll",   type = "ALL" },
