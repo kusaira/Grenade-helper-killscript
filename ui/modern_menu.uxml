@@ -43,7 +43,7 @@
 
                             <!-- TYPE FILTER CHIPS -->
                             <ui:VisualElement style="flex-direction: row; align-items: center;">
-                                <ui:Button name="btnM2FilterAll" text="ALL" class="cmd-preset-btn" style="border-color: #00E5FF; color: #00E5FF;" />
+                                <ui:Button name="btnM2FilterAll" text="ALL" class="cmd-preset-btn" />
                                 <ui:Button name="btnM2FilterSonar" text="SONAR" class="cmd-preset-btn" />
                                 <ui:Button name="btnM2FilterEmp" text="EMP" class="cmd-preset-btn" />
                                 <ui:Button name="btnM2FilterFrag" text="FRAG" class="cmd-preset-btn" />

@@ -443,6 +443,7 @@ function ModernMenu:UpdateToggleButton(buttonName, isEnabled)
 end
 
 function ModernMenu.Refresh()
+    ModernMenu:UpdateFilterButtons(ModernMenu.TypeFilter)
     ModernMenu:RefreshLineupsList()
     ModernMenu:UpdateToggleButton("btnM2Enabled", Storage and Storage.GrenadeHelperEnabled ~= false)
 
@@ -894,18 +895,18 @@ function ModernMenu.Init()
         { name = "btnM2FilterFire",  type = "FIRE" },
     }
 
-    local function UpdateFilterButtons(selectedType)
-        ModernMenu.TypeFilter = selectedType or "ALL"
+    function ModernMenu:UpdateFilterButtons(selectedType)
+        self.TypeFilter = selectedType or "ALL"
         for _, item in ipairs(filterButtons) do
-            local btn = ModernMenu:Find(item.name)
+            local btn = self:Find(item.name)
             if btn then
-                local isActive = (item.type == ModernMenu.TypeFilter)
+                local isActive = (item.type == self.TypeFilter)
                 if btn.EnableInClassList then
                     btn:EnableInClassList("is-active", isActive)
                 end
             end
         end
-        ModernMenu:RefreshLineupsList()
+        self:RefreshLineupsList()
     end
 
     for _, item in ipairs(filterButtons) do
@@ -915,7 +916,7 @@ function ModernMenu.Init()
             if btn.SetCursor then btn:SetCursor("hand") end
             if btn.OnClick then
                 local filterType = item.type
-                btn:OnClick(function() UpdateFilterButtons(filterType) end)
+                btn:OnClick(function() ModernMenu:UpdateFilterButtons(filterType) end)
             end
         end
     end

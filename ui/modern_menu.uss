@@ -521,7 +521,7 @@
     background-color: #131926;
     border-width: 1px;
     border-color: #1E283A;
-    color: #00E5FF;
+    color: #7E8E9F;
     padding-left: 10px;
     padding-right: 10px;
     padding-top: 4px;
@@ -532,8 +532,15 @@
 }
 
 .cmd-preset-btn:hover {
-    background-color: #00E5FF;
-    color: #0B0E17;
+    border-color: #00E5FF;
+    color: #00E5FF;
+}
+
+.cmd-preset-btn.is-active {
+    background-color: rgba(0, 229, 255, 0.18);
+    border-color: #00E5FF;
+    color: #00E5FF;
+    font-weight: bold;
 }
 
 .cmd-modal-actions {
