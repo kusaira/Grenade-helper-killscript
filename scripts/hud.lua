@@ -256,7 +256,7 @@ function HUD:Render(activeLineup, isAligning, agent)
     for _, lineup in ipairs(lineups) do
         if lineup and lineup.standPosition and lineup.standPosition.x then
             local matchesGrenade = LineupService:MatchesGrenadeKey(currentKey, isThrowable, lineup.grenadeType)
-            local hasGrenade = allowAllLineups or matchesGrenade
+            local hasGrenade = isThrowable and matchesGrenade or (allowAllLineups or matchesGrenade)
             local sp = lineup.standPosition
 
             local distToPlayer = 999.0
@@ -417,7 +417,7 @@ function HUD:Render(activeLineup, isAligning, agent)
     for _, lineup in ipairs(lineups) do
         if lineup and lineup.standPosition and lineup.standPosition.x then
             local matchesGrenade = LineupService:MatchesGrenadeKey(currentKey, isThrowable, lineup.grenadeType)
-            local hasGrenade = allowAllLineups or matchesGrenade
+            local hasGrenade = isThrowable and matchesGrenade or (allowAllLineups or matchesGrenade)
             local sp = lineup.standPosition
             local distToPlayer = 999.0
             if agentPos and sp and agentPos.x and sp.x then
