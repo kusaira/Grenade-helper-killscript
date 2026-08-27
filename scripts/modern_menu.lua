@@ -202,6 +202,16 @@ local function RefreshLineupsList()
         captionLabel.text = string.format("INDEX OF SAVED GRENADE TARGETS [MAP: %s]", string.upper(tostring(activeMap or "AUTO")))
     end
 
+    local txtSearch = Find("txtM2SearchInput")
+    if txtSearch then
+        pcall(function()
+            local currentVal = txtSearch.text or txtSearch.value
+            if currentVal ~= nil then
+                ModernMenu.SearchQuery = tostring(currentVal or "")
+            end
+        end)
+    end
+
     local emptyLabel = Find("lblM2EmptyLineups")
     local rawLineups = LineupService:GetAllLineups(activeMap)
     local lineups = {}
@@ -886,13 +896,21 @@ function ModernMenu.Init()
 
     local txtSearch = Find("txtM2SearchInput")
     if txtSearch then
-        if txtSearch.OnValueChanged then
-            txtSearch:OnValueChanged(function(evt)
-                local val = (evt and evt.newValue) or (txtSearch.value or "")
-                ModernMenu.SearchQuery = tostring(val or "")
-                RefreshLineupsList()
-            end)
-        end
+        pcall(function()
+            if txtSearch.RegisterValueChangedCallback then
+                txtSearch:RegisterValueChangedCallback(function(evt)
+                    local val = (evt and evt.newValue) or txtSearch.value or txtSearch.text
+                    ModernMenu.SearchQuery = tostring(val or "")
+                    RefreshLineupsList()
+                end)
+            elseif txtSearch.OnValueChanged then
+                txtSearch:OnValueChanged(function(evt)
+                    local val = (evt and evt.newValue) or txtSearch.value or txtSearch.text
+                    ModernMenu.SearchQuery = tostring(val or "")
+                    RefreshLineupsList()
+                end)
+            end
+        end)
     end
 
     local filterButtons = {
