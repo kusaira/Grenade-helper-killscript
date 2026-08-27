@@ -1,0 +1,544 @@
+/* ============================================================================
+   GRENADE HELPER - CYBERPUNK TACTICAL HUD UI STYLESHEET
+   ============================================================================ */
+
+.aio2-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(4, 7, 12, 0.65);
+}
+
+.aio2-panel {
+    position: absolute;
+    width: 920px;
+    height: 540px;
+    background-color: #0B0E17;
+    border-width: 1px;
+    border-color: rgba(0, 229, 255, 0.4);
+    border-radius: 10px;
+    flex-direction: column;
+    font-family: monospace;
+    overflow: hidden;
+}
+
+/* TOPBAR HEADER */
+.aio2-topbar {
+    height: 42px;
+    background-color: #111724;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 229, 255, 0.25);
+    flex-direction: row;
+    align-items: center;
+    padding-left: 16px;
+    padding-right: 12px;
+}
+
+.aio2-top-pill {
+    flex-direction: row;
+    align-items: center;
+}
+
+.aio2-top-pill-text {
+    color: #00E5FF;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.aio2-topbar-spacer {
+    flex-grow: 1;
+    height: 100%;
+}
+
+.aio2-reset {
+    background-color: rgba(0, 229, 255, 0.12);
+    border-width: 1px;
+    border-color: #00E5FF;
+    color: #00E5FF;
+    font-size: 12px;
+    font-weight: bold;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-right: 8px;
+    border-radius: 6px;
+}
+
+.aio2-reset:hover {
+    background-color: #00E5FF;
+    color: #0B0E17;
+}
+
+.aio2-close {
+    width: 28px;
+    height: 26px;
+    background-color: rgba(255, 59, 92, 0.12);
+    border-width: 1px;
+    border-color: #FF3B5C;
+    color: #FF3B5C;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 6px;
+}
+
+.aio2-close:hover {
+    background-color: #FF3B5C;
+    color: #0B0E17;
+}
+
+/* TERMINAL MAIN BODY */
+.aio2-main {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-direction: column;
+    padding: 18px;
+    overflow: hidden;
+}
+
+.cmd-prompt-line {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.cmd-path {
+    color: #00E5FF;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.cmd-command {
+    color: #00FF9D;
+    font-size: 13px;
+    margin-left: 6px;
+    font-weight: bold;
+}
+
+.cmd-banner {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 11px;
+    margin-bottom: 12px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 229, 255, 0.15);
+    padding-bottom: 6px;
+}
+
+/* TABS / NAV BAR */
+.cmd-nav-bar {
+    flex-direction: row;
+    margin-bottom: 12px;
+}
+
+.aio2-nav-button {
+    background-color: #131926;
+    border-width: 1px;
+    border-color: #1E283A;
+    color: #7E8E9F;
+    padding-left: 18px;
+    padding-right: 18px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    margin-right: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 6px;
+}
+
+.aio2-nav-button:hover {
+    border-color: #00E5FF;
+    color: #00E5FF;
+}
+
+.aio2-nav-button.is-active {
+    background-color: rgba(0, 229, 255, 0.18);
+    border-color: #00E5FF;
+    color: #00E5FF;
+    font-weight: bold;
+}
+
+/* CONTENT CONTAINER */
+.aio2-content {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.aio2-page {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.aio2-page-hidden {
+    display: none;
+}
+
+/* CARD / BOX */
+.aio2-card {
+    background-color: #0D121F;
+    border-width: 1px;
+    border-color: #1A2436;
+    padding: 10px;
+    border-radius: 8px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+.aio2-compact-card {
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding: 14px;
+}
+
+.cmd-scrollview {
+    height: 350px;
+    max-height: 350px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+.aio2-section-caption {
+    color: #00E5FF;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+/* LINEUP CARD ITEMS */
+.cmd-lineup-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-bottom: 6px;
+    background-color: #121826;
+    border-width: 1px;
+    border-color: #1D283A;
+    border-radius: 6px;
+    margin-right: 4px;
+}
+
+.cmd-lineup-item:hover {
+    border-color: rgba(0, 229, 255, 0.4);
+    background-color: #161E2F;
+}
+
+.cmd-lineup-info {
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.cmd-lineup-header-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.cmd-lineup-index {
+    color: #00FF9D;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.cmd-lineup-type-badge {
+    font-size: 10px;
+    font-weight: bold;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-radius: 3px;
+    margin-right: 8px;
+    -unity-text-align: middle-center;
+}
+
+/* DYNAMIC GRENADE TYPE COLOR ACCENTS FOR MENU BADGES */
+.gh-type-frag {
+    background-color: rgba(255, 69, 58, 0.25);
+    border-width: 1px;
+    border-color: #FF453A;
+    color: #FF6961;
+}
+
+.gh-type-shield {
+    background-color: rgba(0, 229, 255, 0.25);
+    border-width: 1px;
+    border-color: #00E5FF;
+    color: #70F3FF;
+}
+
+.gh-type-incendiary {
+    background-color: rgba(255, 159, 10, 0.25);
+    border-width: 1px;
+    border-color: #FF9F0A;
+    color: #FFC04D;
+}
+
+.gh-type-sonar {
+    background-color: rgba(191, 90, 242, 0.25);
+    border-width: 1px;
+    border-color: #BF5AF2;
+    color: #DA8FFF;
+}
+
+.gh-type-emp {
+    background-color: rgba(10, 132, 255, 0.25);
+    border-width: 1px;
+    border-color: #0A84FF;
+    color: #64D2FF;
+}
+
+.gh-type-default {
+    background-color: rgba(0, 255, 157, 0.25);
+    border-width: 1px;
+    border-color: #00FF9D;
+    color: #00FF9D;
+}
+
+.cmd-lineup-title {
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.cmd-lineup-detail {
+    color: #7E8E9F;
+    font-size: 11px;
+}
+
+.cmd-action-box {
+    flex-direction: row;
+    align-items: center;
+}
+
+.cmd-btn-rerecord {
+    background-color: rgba(255, 159, 10, 0.12);
+    border-width: 1px;
+    border-color: #FF9F0A;
+    color: #FF9F0A;
+    font-size: 11px;
+    font-weight: bold;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-right: 6px;
+    border-radius: 4px;
+}
+
+.cmd-btn-rerecord:hover {
+    background-color: #FF9F0A;
+    color: #0B0E17;
+}
+
+.cmd-btn-rename {
+    background-color: rgba(0, 229, 255, 0.12);
+    border-width: 1px;
+    border-color: #00E5FF;
+    color: #00E5FF;
+    font-size: 11px;
+    font-weight: bold;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-right: 6px;
+    border-radius: 4px;
+}
+
+.cmd-btn-rename:hover {
+    background-color: #00E5FF;
+    color: #0B0E17;
+}
+
+.cmd-btn-delete {
+    background-color: rgba(255, 59, 92, 0.12);
+    border-width: 1px;
+    border-color: #FF3B5C;
+    color: #FF3B5C;
+    font-size: 11px;
+    font-weight: bold;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-radius: 4px;
+}
+
+.cmd-btn-delete:hover {
+    background-color: #FF3B5C;
+    color: #0B0E17;
+}
+
+/* ROWS AND TOGGLES */
+.aio2-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: #1A2436;
+}
+
+.aio2-row-label {
+    color: #D1D9E6;
+    font-size: 13px;
+}
+
+.aio2-toggle {
+    background-color: #131926;
+    border-width: 1px;
+    border-color: #FF3B5C;
+    color: #FF3B5C;
+    font-size: 12px;
+    font-weight: bold;
+    font-family: monospace;
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-radius: 6px;
+}
+
+.aio2-toggle.is-on {
+    border-color: #00FF9D;
+    color: #00FF9D;
+    background-color: rgba(0, 255, 157, 0.15);
+}
+
+/* SLIDERS */
+.aio2-slider-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.aio2-slider-label {
+    color: #D1D9E6;
+    font-size: 13px;
+}
+
+.aio2-slider-control {
+    flex-direction: row;
+    align-items: center;
+}
+
+.aio2-slider-track {
+    width: 160px;
+    height: 8px;
+    background-color: #131926;
+    border-width: 1px;
+    border-color: #00FF9D;
+    border-radius: 4px;
+    position: relative;
+}
+
+.aio2-slider-fill {
+    height: 100%;
+    background-color: #00FF9D;
+    border-radius: 3px;
+}
+
+.aio2-slider-handle {
+    width: 10px;
+    height: 16px;
+    background-color: #FFFFFF;
+    border-radius: 3px;
+    position: absolute;
+    top: -4px;
+}
+
+.aio2-slider-value {
+    color: #00FF9D;
+    font-size: 13px;
+    font-weight: bold;
+    margin-left: 12px;
+    min-width: 45px;
+}
+
+/* RENAME MODAL DIALOG */
+.cmd-modal-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(4, 7, 12, 0.85);
+    justify-content: center;
+    align-items: center;
+}
+
+.cmd-modal-box {
+    width: 520px;
+    background-color: #0E131F;
+    border-width: 1px;
+    border-color: #00E5FF;
+    padding: 20px;
+    border-radius: 10px;
+    flex-direction: column;
+}
+
+.cmd-modal-title {
+    color: #00E5FF;
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.cmd-text-field {
+    background-color: #090C14;
+    border-width: 1px;
+    border-color: #00E5FF;
+    color: #FFFFFF;
+    font-size: 13px;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.cmd-preset-bar {
+    flex-direction: row;
+    margin-bottom: 16px;
+}
+
+.cmd-preset-btn {
+    background-color: #131926;
+    border-width: 1px;
+    border-color: #1E283A;
+    color: #00E5FF;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-right: 6px;
+    font-size: 11px;
+    border-radius: 4px;
+}
+
+.cmd-preset-btn:hover {
+    background-color: #00E5FF;
+    color: #0B0E17;
+}
+
+.cmd-modal-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+}

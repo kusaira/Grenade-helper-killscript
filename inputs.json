@@ -1,0 +1,39 @@
+{
+  "Actions": [
+    {
+      "Name": "AlignLineup",
+      "Type": "Button",
+      "Binding": {
+        "Path": "<Keyboard>/alt"
+      }
+    },
+    {
+      "Name": "ToggleGrenadeHelper",
+      "Type": "Button",
+      "Binding": {
+        "Path": "<Keyboard>/f9"
+      }
+    },
+    {
+      "Name": "SaveLineup",
+      "Type": "Button",
+      "Binding": {
+        "Path": "<Keyboard>/f1"
+      }
+    },
+    {
+      "Name": "DeleteLineup",
+      "Type": "Button",
+      "Binding": {
+        "Path": "<Keyboard>/f2"
+      }
+    },
+    {
+      "Name": "ToggleGrenadeMenu",
+      "Type": "Button",
+      "Binding": {
+        "Path": "<Keyboard>/j"
+      }
+    }
+  ]
+}

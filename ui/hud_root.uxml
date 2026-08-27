@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="./hud_styles.uss" />
+
+    <ui:VisualElement name="HudRoot" class="gh-hud-root">
+        <ui:VisualElement name="RecordingBanner" class="gh-rec-banner gh-hidden">
+            <ui:VisualElement class="gh-rec-dot" />
+            <ui:Label name="RecordingBannerText" text="REC • RECORDING IN PROGRESS [PRESS F1 / THROW TO STOP]" class="gh-rec-text" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

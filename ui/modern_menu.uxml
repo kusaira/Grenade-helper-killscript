@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="./modern_menu.uss" />
+    <ui:VisualElement name="ModernMenuOverlay" class="aio2-overlay">
+        <ui:VisualElement name="ModernMenuPanel" class="aio2-panel">
+            
+            <!-- TACTICAL TITLE BAR -->
+            <ui:VisualElement class="aio2-topbar">
+                <ui:VisualElement class="aio2-top-pill">
+                    <ui:Label text="GRENADE HELPER PRO // v2.0" class="aio2-top-pill-text" />
+                </ui:VisualElement>
+                <ui:VisualElement name="veM2DragHandle" class="aio2-topbar-spacer" />
+                <ui:Button name="btnM2SavePoint" text="+ SAVE LINEUP (F1)" class="aio2-reset" />
+                <ui:Button name="btnM2Close" text="X" class="aio2-close" />
+            </ui:VisualElement>
+
+            <!-- MAIN BODY -->
+            <ui:VisualElement class="aio2-main">
+                <ui:VisualElement class="cmd-prompt-line">
+                    <ui:Label text="SYSTEM ::" class="cmd-path" />
+                    <ui:Label text=" ACTIVE CONTROL PANEL" class="cmd-command" />
+                </ui:VisualElement>
+
+                <ui:Label text="KillScript Sandbox Tactical Grenade Assistant module by @Keqqyrr" class="cmd-banner" />
+
+                <!-- NAVIGATION TABS -->
+                <ui:VisualElement class="cmd-nav-bar">
+                    <ui:Button name="btnM2TabLineups" text="[ TARGET LINEUPS ]" class="aio2-nav-button is-active" />
+                    <ui:Button name="btnM2TabSettings" text="[ SYSTEM CONFIG ]" class="aio2-nav-button" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="aio2-content">
+                    
+                    <!-- TAB 1: LINEUPS DIRECTORY -->
+                    <ui:VisualElement name="pageM2Lineups" class="aio2-page">
+                        <ui:Label name="lblM2CurrentMapCaption" text="INDEX OF SAVED TARGETS" class="aio2-section-caption" />
+                        
+                        <!-- MAP PROFILE SELECTOR BAR -->
+                        <ui:VisualElement class="cmd-preset-bar" style="margin-bottom: 10px; align-items: center;">
+                            <ui:Label text="MAP PROFILE:" class="cmd-lineup-title" style="margin-right: 10px; font-size: 11px;" />
+                            <ui:Button name="btnM2MapAuto" text="AUTO-DETECT" class="cmd-preset-btn" style="border-color: #00E5FF; color: #00E5FF;" />
+                            <ui:Button name="btnM2MapCastle" text="CASTLE" class="cmd-preset-btn" />
+                            <ui:Button name="btnM2MapUnderground" text="UNDERGROUND" class="cmd-preset-btn" />
+                            <ui:TextField name="txtM2CustomMap" class="cmd-text-field" style="margin-bottom: 0px; width: 100px; font-size: 11px; padding: 3px;" />
+                            <ui:Button name="btnM2SetCustomMap" text="APPLY" class="cmd-preset-btn" style="margin-left: 6px;" />
+                        </ui:VisualElement>
+
+                        <ui:ScrollView name="veM2LineupList" class="aio2-card cmd-scrollview" mode="Vertical">
+                            <ui:Label name="lblM2EmptyLineups" text="No saved target spots for this map profile. Aim at target and press F1 to save a lineup!" class="aio2-row-label" style="color: #7E8E9F; margin: 20px; text-align: center;" />
+                        </ui:ScrollView>
+                    </ui:VisualElement>
+
+                    <!-- TAB 2: SYSTEM CONFIG -->
+                    <ui:VisualElement name="pageM2Settings" class="aio2-page aio2-page-hidden">
+                        <ui:Label text="SYSTEM CONFIGURATION // GRENADE HELPER V2.0" class="aio2-section-caption" />
+                        <ui:VisualElement class="aio2-card aio2-compact-card">
+                            <ui:VisualElement class="aio2-row">
+                                <ui:Label text="GRENADE HELPER ENGINE" class="aio2-row-label" />
+                                <ui:Button name="btnM2Enabled" text="[ ENABLED ]" class="aio2-toggle" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="aio2-slider-row" style="border-bottom-width: 0px;">
+                                <ui:Label text="ДИСТАНЦИЯ ОБНАРУЖЕНИЯ ТОЧЕК" class="aio2-slider-label" />
+                                <ui:VisualElement class="aio2-slider-control">
+                                    <ui:VisualElement name="trkM2MaxDistance" class="aio2-slider-track">
+                                        <ui:VisualElement name="fillM2MaxDistance" class="aio2-slider-fill" />
+                                        <ui:VisualElement name="hdlM2MaxDistance" class="aio2-slider-handle" />
+                                    </ui:VisualElement>
+                                    <ui:Label name="lblM2MaxDistance" text="2.5 M" class="aio2-slider-value" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <ui:Label text="УПРАВЛЕНИЕ И ГОРЯЧИЕ КЛАВИШИ (HOTKEYS)" class="aio2-section-caption" style="margin-top: 14px;" />
+                        <ui:VisualElement class="aio2-card aio2-compact-card" style="padding: 10px;">
+                            <ui:VisualElement class="cmd-action-box" style="margin-bottom: 6px;">
+                                <ui:Label text="[ ALT ]" class="cmd-path" style="color: #00FF9D; width: 60px;" />
+                                <ui:Label text="Зажать: Показать метки, авто-выровнять и бросить гранату (Hold ALT)" class="cmd-lineup-detail" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="cmd-action-box" style="margin-bottom: 6px;">
+                                <ui:Label text="[ F1 ]" class="cmd-path" style="color: #FF9F0A; width: 60px;" />
+                                <ui:Label text="Записать новый бросок (Record Lineup)" class="cmd-lineup-detail" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="cmd-action-box" style="margin-bottom: 6px;">
+                                <ui:Label text="[ F2 ]" class="cmd-path" style="color: #FF453A; width: 60px;" />
+                                <ui:Label text="Удалить ближайшую метку (Delete Lineup)" class="cmd-lineup-detail" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="cmd-action-box">
+                                <ui:Label text="[ J ]" class="cmd-path" style="color: #BF5AF2; width: 60px;" />
+                                <ui:Label text="Открыть тактическое меню (Toggle Menu v2.0)" class="cmd-lineup-detail" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
+                        <ui:Label text="CONFIG SYNC / BACKUP (CLIPBOARD)" class="aio2-section-caption" style="margin-top: 14px;" />
+                        <ui:VisualElement class="aio2-card aio2-compact-card">
+                            <ui:VisualElement class="cmd-action-box" style="justify-content: space-between; align-items: center;">
+                                <ui:Label text="QUICK SYNC LINEUPS TO CLIPBOARD" class="cmd-lineup-detail" style="color: #00E5FF;" />
+                                <ui:VisualElement style="flex-direction: row; align-items: center;">
+                                    <ui:Button name="btnM2ExportJson" text="EXPORT TO CLIPBOARD" class="aio2-toggle is-on" style="margin-right: 6px;" />
+                                    <ui:Button name="btnM2ImportJson" text="OVERWRITE" class="aio2-toggle" style="margin-right: 6px;" />
+                                    <ui:Button name="btnM2AddJson" text="APPEND" class="aio2-toggle" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+            <!-- RENAME DIALOG MODAL -->
+            <ui:VisualElement name="veM2RenameModal" class="cmd-modal-container" style="display: none;">
+                <ui:VisualElement class="cmd-modal-box">
+                    <ui:Label text="RENAME LINEUP TARGET" class="cmd-modal-title" />
+                    <ui:Label text="Enter new custom callout name for this lineup spot:" class="cmd-lineup-detail" style="margin-bottom: 10px;" />
+                    <ui:TextField name="txtM2RenameInput" class="cmd-text-field" />
+                    
+                    <!-- PRESET QUICK BUTTONS -->
+                    <ui:VisualElement class="cmd-preset-bar">
+                        <ui:Button name="btnM2PresetHeaven" text="Heaven" class="cmd-preset-btn" />
+                        <ui:Button name="btnM2PresetAMain" text="A Main" class="cmd-preset-btn" />
+                        <ui:Button name="btnM2PresetBSite" text="B Site" class="cmd-preset-btn" />
+                        <ui:Button name="btnM2PresetMid" text="Mid" class="cmd-preset-btn" />
+                        <ui:Button name="btnM2PresetWindow" text="Window" class="cmd-preset-btn" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="cmd-modal-actions">
+                        <ui:Button name="btnM2RenameSave" text="CONFIRM" class="aio2-reset" />
+                        <ui:Button name="btnM2RenameCancel" text="CANCEL" class="aio2-close" style="width: auto; padding-left: 14px; padding-right: 14px;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

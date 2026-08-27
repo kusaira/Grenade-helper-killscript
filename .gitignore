@@ -1,0 +1,13 @@
+# Temporary and log files
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# VS Code / IDE settings
+.vscode/
+.idea/
+
+# Scratch scripts
+scratch/
