@@ -1060,6 +1060,17 @@ function ModernMenu.Update()
         ModernMenu.Init()
     end
 
+    if ModernMenu.Open then
+        local txtSearch = Find("txtM2SearchInput")
+        if txtSearch and txtSearch.value ~= nil then
+            local currentVal = tostring(txtSearch.value or "")
+            if currentVal ~= ModernMenu.SearchQuery then
+                ModernMenu.SearchQuery = currentVal
+                RefreshLineupsList()
+            end
+        end
+    end
+
     if ModernMenu.ClickAction == nil and InputActions then
         ModernMenu.ClickAction = InputActions:FindAction("Click")
     end
