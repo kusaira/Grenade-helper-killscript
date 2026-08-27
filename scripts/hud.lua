@@ -237,7 +237,7 @@ function HUD:Render(activeLineup, isAligning, agent)
     local fadeStartDist = 18.0
     local fadeFullDist  = 4.0
 
-    local isAlwaysShowEnabled = (Config and Config.ShowAllLineupsWithoutGrenade == true)
+    local isAlwaysShowEnabled = (Storage and Storage.ShowAllLineupsWithoutGrenade == true) or (Config and Config.ShowAllLineupsWithoutGrenade == true)
     local isAltHeld = false
     if InputActions and InputActions.FindAction then
         local alignAct = InputActions:FindAction("AlignLineup")

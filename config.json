@@ -20,17 +20,5 @@
     "key": "MarkerColor",
     "type": "color",
     "value": "#00FF9D"
-  },
-  {
-    "label": "Всегда показывать метки без гранаты",
-    "key": "ShowAllLineupsWithoutGrenade",
-    "type": "boolean",
-    "value": false
-  },
-  {
-    "label": "Названия точек над маркерами в небе",
-    "key": "ShowSkyTargetLabels",
-    "type": "boolean",
-    "value": true
   }
 ]
