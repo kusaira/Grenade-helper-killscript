@@ -11,6 +11,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="veM2DragHandle" class="aio2-topbar-spacer" />
                 <ui:VisualElement style="flex-direction: row; align-items: center; margin-right: 10px;">
+                    <ui:Label text="CONFIG:" style="color: #00E5FF; font-size: 11px; font-weight: bold; margin-right: 8px;" />
                     <ui:Button name="btnM2ExportJson" text="EXPORT" class="aio2-reset" style="margin-right: 6px; padding-left: 10px; padding-right: 10px;" />
                     <ui:Button name="btnM2ImportJson" text="OVERWRITE" class="aio2-reset" style="margin-right: 6px; padding-left: 10px; padding-right: 10px;" />
                     <ui:Button name="btnM2AddJson" text="APPEND" class="aio2-reset" style="margin-right: 6px; padding-left: 10px; padding-right: 10px;" />
