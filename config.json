@@ -14,11 +14,5 @@
     "min": 0.2,
     "max": 5.0,
     "value": 1.0
-  },
-  {
-    "label": "Цвет ESP маркеров",
-    "key": "MarkerColor",
-    "type": "color",
-    "value": "#00FF9D"
   }
 ]
