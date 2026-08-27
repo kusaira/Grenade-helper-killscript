@@ -204,12 +204,11 @@ local function RefreshLineupsList()
 
     local txtSearch = Find("txtM2SearchInput")
     if txtSearch then
-        pcall(function()
-            local currentVal = txtSearch.text or txtSearch.value
-            if currentVal ~= nil then
-                ModernMenu.SearchQuery = tostring(currentVal or "")
-            end
-        end)
+        local rawText = txtSearch.text
+        if not rawText then rawText = txtSearch.value end
+        if rawText then
+            ModernMenu.SearchQuery = tostring(rawText)
+        end
     end
 
     local emptyLabel = Find("lblM2EmptyLineups")
@@ -896,21 +895,13 @@ function ModernMenu.Init()
 
     local txtSearch = Find("txtM2SearchInput")
     if txtSearch then
-        pcall(function()
-            if txtSearch.RegisterValueChangedCallback then
-                txtSearch:RegisterValueChangedCallback(function(evt)
-                    local val = (evt and evt.newValue) or txtSearch.value or txtSearch.text
-                    ModernMenu.SearchQuery = tostring(val or "")
-                    RefreshLineupsList()
-                end)
-            elseif txtSearch.OnValueChanged then
-                txtSearch:OnValueChanged(function(evt)
-                    local val = (evt and evt.newValue) or txtSearch.value or txtSearch.text
-                    ModernMenu.SearchQuery = tostring(val or "")
-                    RefreshLineupsList()
-                end)
-            end
-        end)
+        if txtSearch.RegisterValueChangedCallback then
+            txtSearch:RegisterValueChangedCallback(function(evt)
+                local val = (evt and evt.newValue) or txtSearch.value or txtSearch.text
+                ModernMenu.SearchQuery = tostring(val or "")
+                RefreshLineupsList()
+            end)
+        end
     end
 
     local filterButtons = {
