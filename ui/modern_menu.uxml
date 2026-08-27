@@ -32,8 +32,27 @@
                     
                     <!-- LINEUPS DIRECTORY -->
                     <ui:VisualElement name="pageM2Lineups" class="aio2-page">
+                        
+                        <!-- SEARCH BAR AND CATEGORY FILTERS BAR -->
+                        <ui:VisualElement class="cmd-filter-bar" style="flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <!-- SEARCH FIELD -->
+                            <ui:VisualElement style="flex-direction: row; align-items: center; flex-grow: 1; margin-right: 12px;">
+                                <ui:Label text="SEARCH:" class="cmd-lineup-title" style="margin-right: 6px; font-size: 11px; color: #00E5FF;" />
+                                <ui:TextField name="txtM2SearchInput" class="cmd-text-field" style="margin-bottom: 0px; flex-grow: 1; font-size: 11px; padding: 4px;" />
+                            </ui:VisualElement>
+
+                            <!-- TYPE FILTER CHIPS -->
+                            <ui:VisualElement style="flex-direction: row; align-items: center;">
+                                <ui:Button name="btnM2FilterAll" text="ALL" class="cmd-preset-btn" style="border-color: #00E5FF; color: #00E5FF;" />
+                                <ui:Button name="btnM2FilterSonar" text="SONAR" class="cmd-preset-btn" />
+                                <ui:Button name="btnM2FilterEmp" text="EMP" class="cmd-preset-btn" />
+                                <ui:Button name="btnM2FilterFrag" text="FRAG" class="cmd-preset-btn" />
+                                <ui:Button name="btnM2FilterFire" text="FIRE" class="cmd-preset-btn" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+
                         <ui:ScrollView name="veM2LineupList" class="aio2-card cmd-scrollview" mode="Vertical">
-                            <ui:Label name="lblM2EmptyLineups" text="No saved target spots for this map profile. Aim at target and press F1 to save a lineup!" class="aio2-row-label" style="color: #7E8E9F; margin: 20px; text-align: center;" />
+                            <ui:Label name="lblM2EmptyLineups" text="No saved target spots matching search filter." class="aio2-row-label" style="color: #7E8E9F; margin: 20px; text-align: center;" />
                         </ui:ScrollView>
                     </ui:VisualElement>
 

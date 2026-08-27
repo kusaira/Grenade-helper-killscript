@@ -24,6 +24,8 @@ local ModernMenu = {
     OffsetX = tonumber(Storage and Storage.GrenadeHelperMenuX),
     OffsetY = tonumber(Storage and Storage.GrenadeHelperMenuY),
     CurrentRenameLineupId = nil,
+    SearchQuery = "",
+    TypeFilter = "ALL",
     Ui = {},
     Pages = {},
     Tabs = {}
@@ -201,7 +203,39 @@ local function RefreshLineupsList()
     end
 
     local emptyLabel = Find("lblM2EmptyLineups")
-    local lineups = LineupService:GetAllLineups(activeMap)
+    local rawLineups = LineupService:GetAllLineups(activeMap)
+    local lineups = {}
+    local query = tostring(ModernMenu.SearchQuery or ""):lower()
+    local filter = tostring(ModernMenu.TypeFilter or "ALL"):upper()
+
+    if rawLineups then
+        for _, item in ipairs(rawLineups) do
+            local matchesText = true
+            if query ~= "" then
+                local desc = tostring(item.description or ""):lower()
+                local gtype = tostring(item.grenadeType or ""):lower()
+                matchesText = (desc:find(query, 1, true) ~= nil) or (gtype:find(query, 1, true) ~= nil)
+            end
+
+            local matchesCategory = true
+            if filter ~= "ALL" then
+                local gtype = tostring(item.grenadeType or ""):upper()
+                if filter == "SONAR" then
+                    matchesCategory = (gtype:find("SONAR") ~= nil)
+                elseif filter == "EMP" then
+                    matchesCategory = (gtype:find("EMP") ~= nil)
+                elseif filter == "FRAG" then
+                    matchesCategory = (gtype:find("FRAG") ~= nil or gtype:find("HE") ~= nil)
+                elseif filter == "FIRE" then
+                    matchesCategory = (gtype:find("INCENDIARY") ~= nil or gtype:find("MOLOTOV") ~= nil or gtype:find("FIRE") ~= nil)
+                end
+            end
+
+            if matchesText and matchesCategory then
+                table.insert(lineups, item)
+            end
+        end
+    end
 
     if not lineups or #lineups == 0 then
         if emptyLabel then
@@ -415,8 +449,10 @@ function ModernMenu.Refresh()
         lblDist.text = string.format("%.1f M", currentDist)
     end
 
-    local isAuto = not (Storage and Storage.CurrentMapProfile and Storage.CurrentMapProfile ~= "")
-    local btnAuto = Find("btnM2MapAuto")
+    local isAuto = not (Storage and Storage.CurrentMapProfile and Storage.CurrentMapProfile ~= nil,
+    SearchQuery = "",
+    TypeFilter = "ALL"
+}    local btnAuto = Find("btnM2MapAuto")
     if btnAuto and btnAuto.EnableInClassList then
         btnAuto:EnableInClassList("is-active", isAuto)
     end
@@ -848,6 +884,51 @@ function ModernMenu.Init()
         if btnClose.EnableMouseEvents then btnClose:EnableMouseEvents() end
         if btnClose.SetCursor then btnClose:SetCursor("hand") end
         if btnClose.OnClick then btnClose:OnClick(Close) end
+    end
+
+    local txtSearch = Find("txtM2SearchInput")
+    if txtSearch then
+        if txtSearch.OnValueChanged then
+            txtSearch:OnValueChanged(function(evt)
+                local val = (evt and evt.newValue) or (txtSearch.value or "")
+                ModernMenu.SearchQuery = tostring(val or "")
+                RefreshLineupsList()
+            end)
+        end
+    end
+
+    local filterButtons = {
+        { name = "btnM2FilterAll",   type = "ALL" },
+        { name = "btnM2FilterSonar", type = "SONAR" },
+        { name = "btnM2FilterEmp",   type = "EMP" },
+        { name = "btnM2FilterFrag",  type = "FRAG" },
+        { name = "btnM2FilterFire",  type = "FIRE" },
+    }
+
+    local function UpdateFilterButtons(selectedType)
+        ModernMenu.TypeFilter = selectedType or "ALL"
+        for _, item in ipairs(filterButtons) do
+            local btn = Find(item.name)
+            if btn then
+                local isActive = (item.type == ModernMenu.TypeFilter)
+                if btn.EnableInClassList then
+                    btn:EnableInClassList("is-active", isActive)
+                end
+            end
+        end
+        RefreshLineupsList()
+    end
+
+    for _, item in ipairs(filterButtons) do
+        local btn = Find(item.name)
+        if btn then
+            if btn.EnableMouseEvents then btn:EnableMouseEvents() end
+            if btn.SetCursor then btn:SetCursor("hand") end
+            if btn.OnClick then
+                local filterType = item.type
+                btn:OnClick(function() UpdateFilterButtons(filterType) end)
+            end
+        end
     end
 
     local btnEnabled = Find("btnM2Enabled")
