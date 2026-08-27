@@ -52,23 +52,6 @@
 
                     <!-- TAB 2: SYSTEM CONFIG -->
                     <ui:VisualElement name="pageM2Settings" class="aio2-page aio2-page-hidden">
-                        <ui:Label text="SYSTEM CONFIGURATION // GRENADE HELPER V2.0" class="aio2-section-caption" />
-                        <ui:VisualElement class="aio2-card aio2-compact-card">
-                            <ui:VisualElement class="aio2-row">
-                                <ui:Label text="GRENADE HELPER ENGINE" class="aio2-row-label" />
-                                <ui:Button name="btnM2Enabled" text="[ ENABLED ]" class="aio2-toggle" />
-                            </ui:VisualElement>
-                            <ui:VisualElement class="aio2-slider-row" style="border-bottom-width: 0px;">
-                                <ui:Label text="ДИСТАНЦИЯ ОБНАРУЖЕНИЯ ТОЧЕК" class="aio2-slider-label" />
-                                <ui:VisualElement class="aio2-slider-control">
-                                    <ui:VisualElement name="trkM2MaxDistance" class="aio2-slider-track">
-                                        <ui:VisualElement name="fillM2MaxDistance" class="aio2-slider-fill" />
-                                        <ui:VisualElement name="hdlM2MaxDistance" class="aio2-slider-handle" />
-                                    </ui:VisualElement>
-                                    <ui:Label name="lblM2MaxDistance" text="2.5 M" class="aio2-slider-value" />
-                                </ui:VisualElement>
-                            </ui:VisualElement>
-                        </ui:VisualElement>
 
                         <ui:Label text="УПРАВЛЕНИЕ И ГОРЯЧИЕ КЛАВИШИ (HOTKEYS)" class="aio2-section-caption" style="margin-top: 14px;" />
                         <ui:VisualElement class="aio2-card aio2-compact-card" style="padding: 10px;">
