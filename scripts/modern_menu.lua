@@ -174,9 +174,7 @@ end
 
 function ModernMenu.OpenRenameModalForLineup(item)
     if not item then return end
-    if not ModernMenu.IsOpen() then
-        if ModernMenu.Toggle then ModernMenu.Toggle() end
-    end
+    Open()
     OpenRenameModal(item)
 end
 
@@ -919,7 +917,7 @@ function ModernMenu.Init()
                     end
                 end
                 CloseRenameModal()
-                ModernMenu.Refresh()
+                Close()
             end)
         end
     end
@@ -927,7 +925,12 @@ function ModernMenu.Init()
     if btnRenameCancel then
         if btnRenameCancel.EnableMouseEvents then btnRenameCancel:EnableMouseEvents() end
         if btnRenameCancel.SetCursor then btnRenameCancel:SetCursor("hand") end
-        if btnRenameCancel.OnClick then btnRenameCancel:OnClick(CloseRenameModal) end
+        if btnRenameCancel.OnClick then
+            btnRenameCancel:OnClick(function()
+                CloseRenameModal()
+                Close()
+            end)
+        end
     end
 
     local presets = {
