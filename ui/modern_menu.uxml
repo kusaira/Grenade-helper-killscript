@@ -10,7 +10,6 @@
                     <ui:Label text="GRENADE HELPER PRO // v2.0" class="aio2-top-pill-text" />
                 </ui:VisualElement>
                 <ui:VisualElement name="veM2DragHandle" class="aio2-topbar-spacer" />
-                <ui:Button name="btnM2SavePoint" text="+ SAVE LINEUP (F1)" class="aio2-reset" />
                 <ui:Button name="btnM2Close" text="X" class="aio2-close" />
             </ui:VisualElement>
 
@@ -33,18 +32,6 @@
                     
                     <!-- TAB 1: LINEUPS DIRECTORY -->
                     <ui:VisualElement name="pageM2Lineups" class="aio2-page">
-                        <ui:Label name="lblM2CurrentMapCaption" text="INDEX OF SAVED TARGETS" class="aio2-section-caption" />
-                        
-                        <!-- MAP PROFILE SELECTOR BAR -->
-                        <ui:VisualElement class="cmd-preset-bar" style="margin-bottom: 10px; align-items: center;">
-                            <ui:Label text="MAP PROFILE:" class="cmd-lineup-title" style="margin-right: 10px; font-size: 11px;" />
-                            <ui:Button name="btnM2MapAuto" text="AUTO-DETECT" class="cmd-preset-btn" style="border-color: #00E5FF; color: #00E5FF;" />
-                            <ui:Button name="btnM2MapCastle" text="CASTLE" class="cmd-preset-btn" />
-                            <ui:Button name="btnM2MapUnderground" text="UNDERGROUND" class="cmd-preset-btn" />
-                            <ui:TextField name="txtM2CustomMap" class="cmd-text-field" style="margin-bottom: 0px; width: 100px; font-size: 11px; padding: 3px;" />
-                            <ui:Button name="btnM2SetCustomMap" text="APPLY" class="cmd-preset-btn" style="margin-left: 6px;" />
-                        </ui:VisualElement>
-
                         <ui:ScrollView name="veM2LineupList" class="aio2-card cmd-scrollview" mode="Vertical">
                             <ui:Label name="lblM2EmptyLineups" text="No saved target spots for this map profile. Aim at target and press F1 to save a lineup!" class="aio2-row-label" style="color: #7E8E9F; margin: 20px; text-align: center;" />
                         </ui:ScrollView>
