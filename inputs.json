@@ -7,13 +7,7 @@
         "Path": "<Keyboard>/alt"
       }
     },
-    {
-      "Name": "ToggleGrenadeHelper",
-      "Type": "Button",
-      "Binding": {
-        "Path": "<Keyboard>/f9"
-      }
-    },
+
     {
       "Name": "SaveLineup",
       "Type": "Button",

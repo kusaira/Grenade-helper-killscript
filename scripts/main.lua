@@ -92,8 +92,6 @@ end
 
 -- Key bindings initialization
 if InputActions then
-    local toggleAction = InputActions:FindAction("ToggleGrenadeHelper")
-    if toggleAction and toggleAction.OnPerformed then toggleAction:OnPerformed(ToggleModule) end
 
     local recordAction = InputActions:FindAction("SaveLineup")
     if recordAction and recordAction.OnPerformed then recordAction:OnPerformed(ToggleRecordingAction) end
