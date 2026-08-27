@@ -449,10 +449,8 @@ function ModernMenu.Refresh()
         lblDist.text = string.format("%.1f M", currentDist)
     end
 
-    local isAuto = not (Storage and Storage.CurrentMapProfile and Storage.CurrentMapProfile ~= nil,
-    SearchQuery = "",
-    TypeFilter = "ALL"
-}    local btnAuto = Find("btnM2MapAuto")
+    local isAuto = not (Storage and Storage.CurrentMapProfile and Storage.CurrentMapProfile ~= "")
+    local btnAuto = Find("btnM2MapAuto")
     if btnAuto and btnAuto.EnableInClassList then
         btnAuto:EnableInClassList("is-active", isAuto)
     end
