@@ -1,6 +1,6 @@
 [
   {
-    "label": "Дальность видимости меток (м)",
+    "label": "Marker Visibility Distance (m)",
     "key": "ActivationDistance",
     "type": "number",
     "min": 0.5,
@@ -8,7 +8,7 @@
     "value": 2.5
   },
   {
-    "label": "Зона авто-дошагивания ног (м)",
+    "label": "Auto-Align Distance (m)",
     "key": "MacroMatchRadius",
     "type": "number",
     "min": 0.2,
