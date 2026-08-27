@@ -172,6 +172,14 @@ local function OpenRenameModal(item)
     end
 end
 
+function ModernMenu.OpenRenameModalForLineup(item)
+    if not item then return end
+    if not ModernMenu.IsOpen() then
+        if ModernMenu.Toggle then ModernMenu.Toggle() end
+    end
+    OpenRenameModal(item)
+end
+
 local function CloseRenameModal()
     ModernMenu.CurrentRenameLineupId = nil
     local modal = Find("veM2RenameModal")

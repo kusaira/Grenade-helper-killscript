@@ -28,6 +28,13 @@
       "Binding": {
         "Path": "<Keyboard>/j"
       }
+    },
+    {
+      "Name": "RenameLineup",
+      "Type": "Button",
+      "Binding": {
+        "Path": "<Keyboard>/f3"
+      }
     }
   ]
 }

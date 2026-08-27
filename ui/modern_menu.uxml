@@ -53,26 +53,6 @@
                     <!-- TAB 2: SYSTEM CONFIG -->
                     <ui:VisualElement name="pageM2Settings" class="aio2-page aio2-page-hidden">
 
-                        <ui:Label text="УПРАВЛЕНИЕ И ГОРЯЧИЕ КЛАВИШИ (HOTKEYS)" class="aio2-section-caption" style="margin-top: 14px;" />
-                        <ui:VisualElement class="aio2-card aio2-compact-card" style="padding: 10px;">
-                            <ui:VisualElement class="cmd-action-box" style="margin-bottom: 6px;">
-                                <ui:Label text="[ ALT ]" class="cmd-path" style="color: #00FF9D; width: 60px;" />
-                                <ui:Label text="Зажать: Показать метки, авто-выровнять и бросить гранату (Hold ALT)" class="cmd-lineup-detail" />
-                            </ui:VisualElement>
-                            <ui:VisualElement class="cmd-action-box" style="margin-bottom: 6px;">
-                                <ui:Label text="[ F1 ]" class="cmd-path" style="color: #FF9F0A; width: 60px;" />
-                                <ui:Label text="Записать новый бросок (Record Lineup)" class="cmd-lineup-detail" />
-                            </ui:VisualElement>
-                            <ui:VisualElement class="cmd-action-box" style="margin-bottom: 6px;">
-                                <ui:Label text="[ F2 ]" class="cmd-path" style="color: #FF453A; width: 60px;" />
-                                <ui:Label text="Удалить ближайшую метку (Delete Lineup)" class="cmd-lineup-detail" />
-                            </ui:VisualElement>
-                            <ui:VisualElement class="cmd-action-box">
-                                <ui:Label text="[ J ]" class="cmd-path" style="color: #BF5AF2; width: 60px;" />
-                                <ui:Label text="Открыть тактическое меню (Toggle Menu v2.0)" class="cmd-lineup-detail" />
-                            </ui:VisualElement>
-                        </ui:VisualElement>
-
                         <ui:Label text="CONFIG SYNC / BACKUP (CLIPBOARD)" class="aio2-section-caption" style="margin-top: 14px;" />
                         <ui:VisualElement class="aio2-card aio2-compact-card">
                             <ui:VisualElement class="cmd-action-box" style="justify-content: space-between; align-items: center;">

@@ -90,6 +90,26 @@ local function DeleteActiveLineupAction()
     end
 end
 
+local function RenameActiveLineupAction()
+    local agent = GetLocalAgent()
+    if not agent then return end
+
+    local activeMap = LineupService:GetCurrentMapName()
+    local maxDist   = Config and Config.ActivationDistance or 2.5
+    local lineup    = LineupService:FindActiveLineup(agent, maxDist, activeMap)
+    if lineup then
+        if ModernMenu and ModernMenu.OpenRenameModalForLineup then
+            ModernMenu.OpenRenameModalForLineup(lineup)
+        end
+        local msg = "Renaming: " .. tostring(lineup.description or "Lineup")
+        print("[GrenadeHelper] " .. msg)
+    else
+        if NotificationController and NotificationController.ShowHint then
+            NotificationController:ShowHint("Stand near a spot to rename it with F3", 2.5)
+        end
+    end
+end
+
 -- Key bindings initialization
 if InputActions then
 
@@ -98,6 +118,9 @@ if InputActions then
 
     local deleteAction = InputActions:FindAction("DeleteLineup") or InputActions:FindAction("DeleteCurrentLineup")
     if deleteAction and deleteAction.OnPerformed then deleteAction:OnPerformed(DeleteActiveLineupAction) end
+
+    local renameAction = InputActions:FindAction("RenameLineup") or InputActions:FindAction("RenameCurrentLineup")
+    if renameAction and renameAction.OnPerformed then renameAction:OnPerformed(RenameActiveLineupAction) end
 
     local menuAction = InputActions:FindAction("ToggleGrenadeMenu")
     if menuAction and menuAction.OnPerformed then menuAction:OnPerformed(function() ModernMenu.Toggle() end) end
