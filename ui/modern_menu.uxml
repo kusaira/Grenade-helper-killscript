@@ -10,6 +10,11 @@
                     <ui:Label text="GRENADE HELPER PRO // v2.0" class="aio2-top-pill-text" />
                 </ui:VisualElement>
                 <ui:VisualElement name="veM2DragHandle" class="aio2-topbar-spacer" />
+                <ui:VisualElement style="flex-direction: row; align-items: center; margin-right: 10px;">
+                    <ui:Button name="btnM2ExportJson" text="EXPORT" class="aio2-reset" style="margin-right: 6px; padding-left: 10px; padding-right: 10px;" />
+                    <ui:Button name="btnM2ImportJson" text="OVERWRITE" class="aio2-reset" style="margin-right: 6px; padding-left: 10px; padding-right: 10px;" />
+                    <ui:Button name="btnM2AddJson" text="APPEND" class="aio2-reset" style="margin-right: 6px; padding-left: 10px; padding-right: 10px;" />
+                </ui:VisualElement>
                 <ui:Button name="btnM2Close" text="X" class="aio2-close" />
             </ui:VisualElement>
 
@@ -22,35 +27,13 @@
 
                 <ui:Label text="KillScript Sandbox Tactical Grenade Assistant module by @Keqqyrr" class="cmd-banner" />
 
-                <!-- NAVIGATION TABS -->
-                <ui:VisualElement class="cmd-nav-bar">
-                    <ui:Button name="btnM2TabLineups" text="[ TARGET LINEUPS ]" class="aio2-nav-button is-active" />
-                    <ui:Button name="btnM2TabSettings" text="[ SYSTEM CONFIG ]" class="aio2-nav-button" />
-                </ui:VisualElement>
-
                 <ui:VisualElement class="aio2-content">
                     
-                    <!-- TAB 1: LINEUPS DIRECTORY -->
+                    <!-- LINEUPS DIRECTORY -->
                     <ui:VisualElement name="pageM2Lineups" class="aio2-page">
                         <ui:ScrollView name="veM2LineupList" class="aio2-card cmd-scrollview" mode="Vertical">
                             <ui:Label name="lblM2EmptyLineups" text="No saved target spots for this map profile. Aim at target and press F1 to save a lineup!" class="aio2-row-label" style="color: #7E8E9F; margin: 20px; text-align: center;" />
                         </ui:ScrollView>
-                    </ui:VisualElement>
-
-                    <!-- TAB 2: SYSTEM CONFIG -->
-                    <ui:VisualElement name="pageM2Settings" class="aio2-page aio2-page-hidden">
-
-                        <ui:Label text="CONFIG SYNC / BACKUP (CLIPBOARD)" class="aio2-section-caption" style="margin-top: 14px;" />
-                        <ui:VisualElement class="aio2-card aio2-compact-card">
-                            <ui:VisualElement class="cmd-action-box" style="justify-content: space-between; align-items: center;">
-                                <ui:Label text="QUICK SYNC LINEUPS TO CLIPBOARD" class="cmd-lineup-detail" style="color: #00E5FF;" />
-                                <ui:VisualElement style="flex-direction: row; align-items: center;">
-                                    <ui:Button name="btnM2ExportJson" text="EXPORT TO CLIPBOARD" class="aio2-toggle is-on" style="margin-right: 6px;" />
-                                    <ui:Button name="btnM2ImportJson" text="OVERWRITE" class="aio2-toggle" style="margin-right: 6px;" />
-                                    <ui:Button name="btnM2AddJson" text="APPEND" class="aio2-toggle" />
-                                </ui:VisualElement>
-                            </ui:VisualElement>
-                        </ui:VisualElement>
                     </ui:VisualElement>
 
                 </ui:VisualElement>
