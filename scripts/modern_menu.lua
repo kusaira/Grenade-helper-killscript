@@ -30,6 +30,7 @@ local ModernMenu = {
 }
 
 local LineupRowPool = {}
+local Open, Close
 
 local function Find(name)
     if not ModernMenu.Root then return nil end
@@ -421,7 +422,7 @@ function ModernMenu.Refresh()
     end
 end
 
-local function Close()
+Close = function()
     ModernMenu.Open = false
     ModernMenu.Dragging = false
     CloseRenameModal()
@@ -430,7 +431,7 @@ local function Close()
     end
 end
 
-local function Open()
+Open = function()
     ModernMenu.Open = true
     if ModernMenu.Root and UI and UI.OpenWindow then
         ApplyPosition(false)
