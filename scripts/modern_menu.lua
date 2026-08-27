@@ -204,8 +204,7 @@ local function RefreshLineupsList()
 
     local txtSearch = Find("txtM2SearchInput")
     if txtSearch then
-        local rawText = txtSearch.text
-        if not rawText then rawText = txtSearch.value end
+        local rawText = txtSearch.value
         if rawText then
             ModernMenu.SearchQuery = tostring(rawText)
         end
