@@ -1,30 +1,27 @@
 -- ============================================================================
--- GrenadeHelper - Cyberpunk Tactical ESP & World Visuals Component (Nil-Safe)
+-- GrenadeHelper - Cyberpunk Tactical ESP & World Visuals Component Class
 -- ============================================================================
 
 local LineupService = require("lineup_service")
 local Recorder      = require("action_recorder")
 local MathUtils     = require("math_utils")
 
-local CreateVector3    = MathUtils.CreateVector3
-local AngleDiffDegrees = MathUtils.AngleDiffDegrees
+local HUD = {
+    HudRoot          = nil,
+    HudRootContainer = nil,
+    OverlayPool      = {},
+    TagPool          = {},
+    AimMarkerPool    = {},
+}
 
-local HUD = {}
-
-local HudRoot          = nil
-local HudRootContainer = nil
-local OverlayPool      = {}
-local TagPool          = {}
-local AimMarkerPool    = {}
-
-local function CreateColor(r, g, b, a)
+function HUD:CreateColor(r, g, b, a)
     if Color and Color.new then
         return Color.new(r or 1, g or 1, b or 1, a or 1)
     end
     return Color(r or 1, g or 1, b or 1, a or 1)
 end
 
-local function ParseRGB(hexStr)
+function HUD:ParseRGB(hexStr)
     if not hexStr or tostring(hexStr) == "" then
         return 0.0, 1.0, 0.61
     end
@@ -35,7 +32,7 @@ local function ParseRGB(hexStr)
     return r / 255, g / 255, b / 255
 end
 
-local function ComputeAimPoint(standPos, pitch, yaw, distance)
+function HUD:ComputeAimPoint(standPos, pitch, yaw, distance)
     local yawRad   = math.rad(yaw or 0)
     local pitchRad = math.rad(pitch or 0)
     local cosPitch = math.cos(pitchRad)
@@ -47,14 +44,14 @@ local function ComputeAimPoint(standPos, pitch, yaw, distance)
     local sy = standPos and standPos.y or 0
     local sz = standPos and standPos.z or 0
 
-    return CreateVector3(
+    return MathUtils:CreateVector3(
         sx + forwardX * distance,
         sy + 1.6 + forwardY * distance,
         sz + forwardZ * distance
     )
 end
 
-local function FindChild(parent, name)
+function HUD:FindChild(parent, name)
     if not parent then return nil end
     if parent.GetChild then
         return parent:GetChild(name)
@@ -62,7 +59,7 @@ local function FindChild(parent, name)
     return nil
 end
 
-local function FormatGrenadeType(typeName)
+function HUD:FormatGrenadeType(typeName)
     if not typeName or typeName == "" then return "GRENADE" end
     local lowerStr = tostring(typeName):lower()
 
@@ -83,7 +80,7 @@ local function FormatGrenadeType(typeName)
     return string.upper(tostring(typeName))
 end
 
-local function UpdateTagTypeClass(element, typeName)
+function HUD:UpdateTagTypeClass(element, typeName)
     if not element or not element.EnableInClassList then return end
     local lower = tostring(typeName):lower()
 
@@ -98,34 +95,34 @@ local function UpdateTagTypeClass(element, typeName)
 end
 
 function HUD:Init()
-    if UI and UI.BuildFromUxmlAbsolute and not HudRoot then
-        HudRoot = UI:BuildFromUxmlAbsolute("hud_root.uxml")
-        if HudRoot then
-            HudRootContainer = FindChild(HudRoot, "HudRoot") or HudRoot
+    if UI and UI.BuildFromUxmlAbsolute and not self.HudRoot then
+        self.HudRoot = UI:BuildFromUxmlAbsolute("hud_root.uxml")
+        if self.HudRoot then
+            self.HudRootContainer = self:FindChild(self.HudRoot, "HudRoot") or self.HudRoot
         end
     end
 end
 
-local function GetOrCreateOverlay(index)
-    local overlay = OverlayPool[index]
+function HUD:GetOrCreateOverlay(index)
+    local overlay = self.OverlayPool[index]
     if not overlay and WorldVisuals and WorldVisuals.CreateSurfaceOverlay then
         overlay = WorldVisuals:CreateSurfaceOverlay()
         if overlay then
             local radius = 0.65
             local diameter = radius * 2.0
-            if overlay.SetSize then overlay:SetSize(CreateVector3(diameter, diameter, diameter)) end
+            if overlay.SetSize then overlay:SetSize(MathUtils:CreateVector3(diameter, diameter, diameter)) end
             if overlay.SetFillBase then overlay:SetFillBase(1.0) end
             if overlay.SetOcclusionEnabled then overlay:SetOcclusionEnabled(false) end
             if overlay.SetVisible then overlay:SetVisible(false) end
-            OverlayPool[index] = overlay
+            self.OverlayPool[index] = overlay
         end
     end
     return overlay
 end
 
-local function GetOrCreateTag(index)
-    local tag = TagPool[index]
-    if not tag and HudRootContainer and UI and UI.CreateVisualElement and UI.CreateLabel then
+function HUD:GetOrCreateTag(index)
+    local tag = self.TagPool[index]
+    if not tag and self.HudRootContainer and UI and UI.CreateVisualElement and UI.CreateLabel then
         local container = UI:CreateVisualElement()
         if container then
             container:AddToClassList("gh-world-tag")
@@ -143,7 +140,7 @@ local function GetOrCreateTag(index)
             container:Add(titleLabel)
             container:Add(subLabel)
 
-            HudRootContainer:Add(container)
+            self.HudRootContainer:Add(container)
 
             tag = {
                 container  = container,
@@ -151,15 +148,15 @@ local function GetOrCreateTag(index)
                 titleLabel = titleLabel,
                 subLabel   = subLabel
             }
-            TagPool[index] = tag
+            self.TagPool[index] = tag
         end
     end
     return tag
 end
 
-local function GetOrCreateAimMarker(index)
-    local marker = AimMarkerPool[index]
-    if not marker and HudRootContainer and UI and UI.CreateVisualElement then
+function HUD:GetOrCreateAimMarker(index)
+    local marker = self.AimMarkerPool[index]
+    if not marker and self.HudRootContainer and UI and UI.CreateVisualElement then
         local dot = UI:CreateVisualElement()
         if dot then
             dot:AddToClassList("gh-aim-marker")
@@ -174,24 +171,42 @@ local function GetOrCreateAimMarker(index)
             label:AddToClassList("gh-aim-label")
             dot:Add(label)
 
-            HudRootContainer:Add(dot)
+            self.HudRootContainer:Add(dot)
             marker = { dot = dot, innerDot = innerDot, label = label }
-            AimMarkerPool[index] = marker
+            self.AimMarkerPool[index] = marker
         end
     end
     return marker
 end
 
+function HUD:FormatClusterSummary(typeCounts)
+    local parts = {}
+    local order = { "SONAR", "EMP", "INCENDIARY", "FRAG", "SHIELD", "POWERSHIELD", "GRENADE" }
+    local seen = {}
+    for _, t in ipairs(order) do
+        local count = typeCounts[t]
+        if count and count > 0 then
+            table.insert(parts, t .. " - " .. tostring(count))
+            seen[t] = true
+        end
+    end
+    for t, count in pairs(typeCounts) do
+        if not seen[t] and count > 0 then
+            table.insert(parts, tostring(t) .. " - " .. tostring(count))
+        end
+    end
+    return table.concat(parts, "  ")
+end
+
 function HUD:Render(activeLineup, isAligning, agent)
-    if not HudRoot then
+    if not self.HudRoot then
         self:Init()
     end
 
     local isRecording = Recorder and Recorder.Recording == true
 
-    -- Render UXML Recording Banner notification
-    if HudRootContainer then
-        local recBanner = FindChild(HudRootContainer, "RecordingBanner")
+    if self.HudRootContainer then
+        local recBanner = self:FindChild(self.HudRootContainer, "RecordingBanner")
         if recBanner then
             recBanner.visible = isRecording
             if recBanner.style and DisplayStyle then
@@ -203,7 +218,6 @@ function HUD:Render(activeLineup, isAligning, agent)
         end
     end
 
-    -- Render ImGui Recording Banner notification
     if isRecording and ImGui and ImGui.Begin and Screen then
         local sw = (Screen and Screen.Width) or 1920
         if ImGui.SetNextWindowPos then
@@ -232,7 +246,7 @@ function HUD:Render(activeLineup, isAligning, agent)
     local currentYaw = lookRot and lookRot.y
 
     local currentKey, isThrowable = LineupService:GetCurrentGrenadeKey(agent)
-    local r, g, b = ParseRGB(Config and Config.MarkerColor or "#00FF9D")
+    local r, g, b = self:ParseRGB(Config and Config.MarkerColor or "#00FF9D")
 
     local fadeStartDist = 18.0
     local fadeFullDist  = 4.0
@@ -251,7 +265,6 @@ function HUD:Render(activeLineup, isAligning, agent)
     local visibleMarkerCount = 0
     local visibleOverlayCount = 0
 
-    -- Phase 1: Cluster nearby standing positions for ground tags & 3D overlays
     local clusters = {}
     for _, lineup in ipairs(lineups) do
         if lineup and lineup.standPosition and lineup.standPosition.x then
@@ -320,50 +333,30 @@ function HUD:Render(activeLineup, isAligning, agent)
                     foundCluster.hasActive = true
                 end
 
-                local gType = FormatGrenadeType(lineup.grenadeType)
+                local gType = self:FormatGrenadeType(lineup.grenadeType)
                 foundCluster.typeCounts[gType] = (foundCluster.typeCounts[gType] or 0) + 1
             end
         end
     end
 
-    local function FormatClusterSummary(typeCounts)
-        local parts = {}
-        local order = { "SONAR", "EMP", "INCENDIARY", "FRAG", "SHIELD", "POWERSHIELD", "GRENADE" }
-        local seen = {}
-        for _, t in ipairs(order) do
-            local count = typeCounts[t]
-            if count and count > 0 then
-                table.insert(parts, t .. " - " .. tostring(count))
-                seen[t] = true
-            end
-        end
-        for t, count in pairs(typeCounts) do
-            if not seen[t] and count > 0 then
-                table.insert(parts, tostring(t) .. " - " .. tostring(count))
-            end
-        end
-        return table.concat(parts, "  ")
-    end
-
-    -- Render Ground Tags & 3D Surface Overlays for Clusters
     for _, cl in ipairs(clusters) do
         local sp = cl.center
         local opacity = cl.maxOpacity
 
         visibleOverlayCount = visibleOverlayCount + 1
-        local overlay = GetOrCreateOverlay(visibleOverlayCount)
+        local overlay = self:GetOrCreateOverlay(visibleOverlayCount)
         if overlay and overlay.SetPosition and overlay.SetColor and overlay.SetVisible then
-            overlay:SetPosition(CreateVector3(sp.x, (sp.y or 0) + 0.05, sp.z))
+            overlay:SetPosition(MathUtils:CreateVector3(sp.x, (sp.y or 0) + 0.05, sp.z))
             local circleAlpha = (cl.hasActive and isAligning) and (0.80 * opacity) or (0.50 * opacity)
-            overlay:SetColor(CreateColor(r, g, b, circleAlpha))
+            overlay:SetColor(self:CreateColor(r, g, b, circleAlpha))
             overlay:SetVisible(true)
         end
 
         if camera and camera.WorldToViewportPoint and UI and UI.ViewportToUiPoint then
             visibleTagCount = visibleTagCount + 1
-            local tag = GetOrCreateTag(visibleTagCount)
+            local tag = self:GetOrCreateTag(visibleTagCount)
             if tag then
-                local worldPos = CreateVector3(sp.x, (sp.y or 0) + 1.25, sp.z)
+                local worldPos = MathUtils:CreateVector3(sp.x, (sp.y or 0) + 1.25, sp.z)
                 local viewport = camera:WorldToViewportPoint(worldPos)
 
                 if viewport and viewport.z and viewport.z > 0 then
@@ -375,10 +368,10 @@ function HUD:Render(activeLineup, isAligning, agent)
 
                         if #cl.items == 1 then
                             local lineup = cl.items[1]
-                            local formattedType = FormatGrenadeType(lineup.grenadeType)
+                            local formattedType = self:FormatGrenadeType(lineup.grenadeType)
                             if tag.typeLabel then
                                 tag.typeLabel.text = formattedType
-                                UpdateTagTypeClass(tag.typeLabel, formattedType)
+                                self:UpdateTagTypeClass(tag.typeLabel, formattedType)
                             end
                             if tag.titleLabel then
                                 tag.titleLabel.text = string.upper(tostring(lineup.description or "LINEUP"))
@@ -386,10 +379,10 @@ function HUD:Render(activeLineup, isAligning, agent)
                         else
                             if tag.typeLabel then
                                 tag.typeLabel.text = "POS (" .. tostring(#cl.items) .. ")"
-                                UpdateTagTypeClass(tag.typeLabel, "default")
+                                self:UpdateTagTypeClass(tag.typeLabel, "default")
                             end
                             if tag.titleLabel then
-                                tag.titleLabel.text = FormatClusterSummary(cl.typeCounts)
+                                tag.titleLabel.text = self:FormatClusterSummary(cl.typeCounts)
                             end
                         end
 
@@ -417,7 +410,6 @@ function HUD:Render(activeLineup, isAligning, agent)
         end
     end
 
-    -- Phase 2: Render Sky Aim Markers for nearby lineups
     local matchRadius = (Config and Config.ActivationDistance) or 2.5
     local showSkyLabels = (Config and Config.ShowSkyTargetLabels ~= false)
 
@@ -446,14 +438,14 @@ function HUD:Render(activeLineup, isAligning, agent)
                 and camera and camera.WorldToViewportPoint and UI and UI.ViewportToUiPoint
 
             if showMarker then
-                local aimPoint = ComputeAimPoint(sp, lineup.pitch, lineup.yaw, 5.0)
+                local aimPoint = self:ComputeAimPoint(sp, lineup.pitch, lineup.yaw, 5.0)
                 local viewport = camera:WorldToViewportPoint(aimPoint)
 
                 if viewport and viewport.z and viewport.z > 0 then
                     local uiPoint = UI:ViewportToUiPoint(viewport)
                     if uiPoint and uiPoint.x then
                         visibleMarkerCount = visibleMarkerCount + 1
-                        local marker = GetOrCreateAimMarker(visibleMarkerCount)
+                        local marker = self:GetOrCreateAimMarker(visibleMarkerCount)
                         if marker and marker.dot and marker.dot.style then
                             marker.dot.style.left = uiPoint.x
                             marker.dot.style.top  = uiPoint.y
@@ -461,7 +453,7 @@ function HUD:Render(activeLineup, isAligning, agent)
                             if marker.label then
                                 if showSkyLabels then
                                     local desc = string.upper(tostring(lineup.description or "AIM POINT"))
-                                    local gType = FormatGrenadeType(lineup.grenadeType)
+                                    local gType = self:FormatGrenadeType(lineup.grenadeType)
                                     marker.label.text = desc .. " [" .. gType .. "]"
                                     if DisplayStyle then marker.label.style.display = DisplayStyle.Flex end
                                 else
@@ -469,9 +461,8 @@ function HUD:Render(activeLineup, isAligning, agent)
                                 end
                             end
 
-                            -- ONLY the single active lineup selected by FindActiveLineup turns green!
                             local isSelected = (activeLineup and activeLineup.id == lineup.id)
-                            local aligned = isSelected and currentYaw and (AngleDiffDegrees(currentYaw, lineup.yaw or 0) <= 20)
+                            local aligned = isSelected and currentYaw and (MathUtils:AngleDiffDegrees(currentYaw, lineup.yaw or 0) <= 20)
                             if marker.dot.EnableInClassList then
                                 marker.dot:EnableInClassList("gh-aim-marker-aligned", aligned == true)
                                 marker.dot:EnableInClassList("gh-aim-marker-unaligned", aligned == false)
@@ -492,38 +483,35 @@ function HUD:Render(activeLineup, isAligning, agent)
         end
     end
 
-    -- Safely trim excess 3D surface overlays and release spawner slots back to WorldVisuals
-    for i = #OverlayPool, visibleOverlayCount + 1, -1 do
-        local overlay = OverlayPool[i]
+    for i = #self.OverlayPool, visibleOverlayCount + 1, -1 do
+        local overlay = self.OverlayPool[i]
         if overlay then
             if overlay.SetVisible then overlay:SetVisible(false) end
             if WorldVisuals and WorldVisuals.RemoveObject then
                 WorldVisuals:RemoveObject(overlay)
             end
         end
-        OverlayPool[i] = nil
+        self.OverlayPool[i] = nil
     end
 
-    -- Trim excess tags beyond visible count to keep element count minimal
-    for i = #TagPool, visibleTagCount + 1, -1 do
-        local tag = TagPool[i]
+    for i = #self.TagPool, visibleTagCount + 1, -1 do
+        local tag = self.TagPool[i]
         if tag and tag.container then
             if tag.container.RemoveFromHierarchy then tag.container:RemoveFromHierarchy() end
             if tag.container.Delete then tag.container:Delete()
             elseif UI and UI.Delete then UI:Delete(tag.container) end
         end
-        TagPool[i] = nil
+        self.TagPool[i] = nil
     end
 
-    -- Trim excess reticle markers beyond visible count
-    for i = #AimMarkerPool, visibleMarkerCount + 1, -1 do
-        local marker = AimMarkerPool[i]
+    for i = #self.AimMarkerPool, visibleMarkerCount + 1, -1 do
+        local marker = self.AimMarkerPool[i]
         if marker and marker.dot then
             if marker.dot.RemoveFromHierarchy then marker.dot:RemoveFromHierarchy() end
             if marker.dot.Delete then marker.dot:Delete()
             elseif UI and UI.Delete then UI:Delete(marker.dot) end
         end
-        AimMarkerPool[i] = nil
+        self.AimMarkerPool[i] = nil
     end
 end
 

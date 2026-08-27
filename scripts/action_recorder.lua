@@ -1,5 +1,5 @@
 -- ============================================================================
--- GrenadeHelper - Tick-Based Input Recorder (Capture & Compress)
+-- GrenadeHelper - Tick-Based Input Recorder Class (Capture & Compress)
 -- ============================================================================
 
 local LineupService = require("lineup_service")
@@ -12,47 +12,33 @@ local Recorder = {
     Baseline         = nil,
     RerecordTargetId = nil,
     TargetMapName    = nil,
+    IDLE_SPEED_THRESHOLD = 0.05,
 }
 
-local function SafeGetCurrentItem(agent)
+function Recorder:SafeGetCurrentItem(agent)
     if not agent or not agent.Inventory then return nil end
     return agent.Inventory.CurrentItem
 end
 
-local function GetThrowState(item)
+function Recorder:GetThrowState(item)
     local throwable = item and item.AsThrowableItem
     if not throwable then return nil end
     return throwable.ThrowState
 end
 
-local function CopyVec2(v)
+function Recorder:CopyVec2(v)
     if not v then return { x = 0, y = 0 } end
     return { x = v.x or 0, y = v.y or 0 }
 end
 
--- Below this horizontal speed, the player counts as "not moving" for the
--- purpose of trimming idle stretches (see IsMeaningfulSample).
-local IDLE_SPEED_THRESHOLD = 0.05
-
---- A tick is worth keeping if the player was actually doing something -
---- moving, holding a direction, jumping, crouching, or throwing. Camera
---- drift alone (aim changing while standing still) is not meaningful: it's
---- just the player looking around before/after the real action, not part
---- of the lineup itself.
-local function IsMeaningfulSample(sample)
+function Recorder:IsMeaningfulSample(sample)
     if sample.move.x ~= 0 or sample.move.y ~= 0 then return true end
     if sample.jump or sample.crouch or sample.fire or sample.altFire then return true end
-    if (sample.speed or 0) > IDLE_SPEED_THRESHOLD then return true end
+    if (sample.speed or 0) > self.IDLE_SPEED_THRESHOLD then return true end
     return false
 end
 
---- Collapses a raw per-sampled-tick buffer into a sparse list of change-point
---- events: the first sample is always emitted in full (baseline), and every
---- later sample only contributes the fields that actually differ from the
---- previously known value of that field.
----@param rawBuffer table[]
----@return table[] events
-local function CompressBuffer(rawBuffer)
+function Recorder:CompressBuffer(rawBuffer)
     local events = {}
     local prev = nil
 
@@ -79,9 +65,6 @@ local function CompressBuffer(rawBuffer)
             if sample.altFire ~= prev.altFire then changed.altFire = sample.altFire end
         end
 
-        -- Defensive: a genuine press should already show up via the diff
-        -- above; this only guards against the very first sampled tick after
-        -- a jump was already mid-air (no prior "false" to diff against).
         if sample.jumpPressed and changed.jump == nil and (not prev or prev.jump == false) then
             changed.jump = true
         end
@@ -99,11 +82,6 @@ local function CompressBuffer(rawBuffer)
     return events
 end
 
---- Starts recording. Requires a throwable/bridge-charge item to be equipped
---- (same rule the old one-shot save used) so the baseline grenade type is
---- always known.
----@param agent Agent
----@param mapName string|nil
 function Recorder:Start(agent, mapName)
     if self.Recording then return false, "Already recording" end
 
@@ -131,8 +109,6 @@ function Recorder:Start(agent, mapName)
     return true
 end
 
---- Same as Start, but marks the recording to overwrite an existing lineup
---- (by id) instead of inserting a new one once it stops.
 function Recorder:StartRerecord(lineupId, mapName)
     if self.Recording then return false, "Already recording" end
     if not lineupId then return false, "Missing lineup id" end
@@ -149,10 +125,6 @@ function Recorder:StartRerecord(lineupId, mapName)
     return ok, err
 end
 
---- Called every client frame while recording. Samples at most once per real
---- simulation tick (Time.Tick), since Scheduler:OnTick is server-only and
---- unavailable to this client module.
----@param agent Agent
 function Recorder:Tick(agent)
     if not self.Recording then return end
     if not Time or Time.Tick == nil then return end
@@ -170,17 +142,14 @@ function Recorder:Tick(agent)
     local fireDown    = EInputButton and AgentInput and AgentInput.IsButtonDown and AgentInput:IsButtonDown(EInputButton.Fire) == true
     local altFireDown = EInputButton and AgentInput and AgentInput.IsButtonDown and AgentInput:IsButtonDown(EInputButton.AlternateFire) == true
 
-    -- Position and speed are only used transiently, to trim idle lead-in/
-    -- trail-off in StopAndSave and to re-anchor the baseline if the start
-    -- gets trimmed away - neither ends up in the saved action track.
     local truePos = agent.Movement and agent.Movement.Position
     local vel = agent.Movement and agent.Movement.Velocity
     local speed = vel and math.sqrt((vel.x or 0) ^ 2 + (vel.z or 0) ^ 2) or 0
 
     table.insert(self.RawBuffer, {
         tickOffset  = currentTick - self.StartTick,
-        move        = CopyVec2(move),
-        look        = CopyVec2(look),
+        move        = self:CopyVec2(move),
+        look        = self:CopyVec2(look),
         jump        = jumpDown,
         jumpPressed = jumpPressed,
         crouch      = crouchDown,
@@ -190,8 +159,8 @@ function Recorder:Tick(agent)
         speed       = speed,
     })
 
-    local item = SafeGetCurrentItem(agent)
-    local throwState = GetThrowState(item)
+    local item = self:SafeGetCurrentItem(agent)
+    local throwState = self:GetThrowState(item)
     if EThrowState and (throwState == EThrowState.Throwing or throwState == EThrowState.ThrowingAlternate) then
         local lastSample = self.RawBuffer[#self.RawBuffer]
         if lastSample then
@@ -205,9 +174,6 @@ function Recorder:Tick(agent)
     end
 end
 
---- Stops recording (if active), compresses the buffer, and saves it as a new
---- or overwritten (re-record) lineup.
----@param agent Agent
 function Recorder:StopAndSave(agent)
     if not self.Recording then return false, "Not recording" end
     self.Recording = false
@@ -221,15 +187,9 @@ function Recorder:StopAndSave(agent)
         return false, "Empty recording"
     end
 
-    -- Trim idle lead-in/trail-off: stretches where only the camera drifted
-    -- but nothing actually happened (no velocity, no move input, no buttons)
-    -- are the player standing around deciding what to do, not the lineup
-    -- itself. Keep only the span between the first and last meaningful tick.
-    -- If nothing was ever meaningful, leave the buffer untouched rather than
-    -- discarding the whole recording.
     local firstIdx, lastIdx = nil, nil
     for i, sample in ipairs(self.RawBuffer) do
-        if IsMeaningfulSample(sample) then
+        if self:IsMeaningfulSample(sample) then
             if not firstIdx then firstIdx = i end
             lastIdx = i
         end
@@ -239,9 +199,6 @@ function Recorder:StopAndSave(agent)
         local firstSample = self.RawBuffer[firstIdx]
         local baseTick = firstSample.tickOffset
 
-        -- Re-anchor the baseline to where the useful recording now starts,
-        -- not where F1 was originally pressed, so pre-roll walks/aims the
-        -- player to the right spot before tick playback begins.
         if firstSample.pos then
             self.Baseline.pos = { x = firstSample.pos.x, y = firstSample.pos.y, z = firstSample.pos.z }
         end
@@ -265,8 +222,6 @@ function Recorder:StopAndSave(agent)
         self.RawBuffer = trimmed
     end
 
-    -- Force a closing sample so a still-held jump/crouch/fire at the moment
-    -- of stop doesn't leave a dangling "pressed" state on replay.
     local last = self.RawBuffer[#self.RawBuffer]
     if last.jump or last.crouch or last.fire or last.altFire then
         table.insert(self.RawBuffer, {
@@ -281,7 +236,7 @@ function Recorder:StopAndSave(agent)
         })
     end
 
-    local events = CompressBuffer(self.RawBuffer)
+    local events = self:CompressBuffer(self.RawBuffer)
     local durationTicks = self.RawBuffer[#self.RawBuffer].tickOffset
 
     local actionsTrack = { durationTicks = durationTicks, events = events }

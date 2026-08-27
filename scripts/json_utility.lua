@@ -1,20 +1,19 @@
 -- ============================================================================
--- GrenadeHelper - Pure Lua JSON Utility (Sandbox Compatible, NO type() global)
+-- GrenadeHelper - Pure Lua JSON Utility Class (Sandbox Compatible)
 -- ============================================================================
 
-local Json = {}
+local JsonUtility = {}
 
-local function safe_type(val)
+function JsonUtility:SafeType(val)
     if val == nil then return "nil" end
     if val == true or val == false then return "boolean" end
-    if type then return type(val) end
     if tonumber(val) ~= nil and val == tonumber(val) then return "number" end
     local strVal = tostring(val)
     if strVal:sub(1, 6) == "table:" then return "table" end
     return "string"
 end
 
-local function escape_str(s)
+function JsonUtility:EscapeStr(s)
     local in_char  = {'\\', '"', '/', '\b', '\f', '\n', '\r', '\t'}
     local out_char = {'\\\\', '\\"', '\\/', '\\b', '\\f', '\\n', '\\r', '\\t'}
     for i, c in ipairs(in_char) do
@@ -23,8 +22,9 @@ local function escape_str(s)
     return s
 end
 
-function Json.encode(val)
-    local t = safe_type(val)
+function JsonUtility.encode(val)
+    local self = JsonUtility
+    local t = self:SafeType(val)
     if t == "nil" then
         return "null"
     elseif t == "boolean" then
@@ -32,12 +32,12 @@ function Json.encode(val)
     elseif t == "number" then
         return tostring(val)
     elseif t == "string" then
-        return '"' .. escape_str(tostring(val)) .. '"'
+        return '"' .. self:EscapeStr(tostring(val)) .. '"'
     elseif t == "table" then
         local is_array = true
         local max_idx = 0
         for k, v in pairs(val) do
-            local kt = safe_type(k)
+            local kt = self:SafeType(k)
             if kt ~= "number" or k < 1 or math.floor(k) ~= k then
                 is_array = false
                 break
@@ -48,13 +48,13 @@ function Json.encode(val)
         if is_array then
             local parts = {}
             for i = 1, max_idx do
-                table.insert(parts, Json.encode(val[i]))
+                table.insert(parts, JsonUtility.encode(val[i]))
             end
             return "[" .. table.concat(parts, ",") .. "]"
         else
             local parts = {}
             for k, v in pairs(val) do
-                table.insert(parts, '"' .. escape_str(tostring(k)) .. '":' .. Json.encode(v))
+                table.insert(parts, '"' .. self:EscapeStr(tostring(k)) .. '":' .. JsonUtility.encode(v))
             end
             return "{" .. table.concat(parts, ",") .. "}"
         end
@@ -62,7 +62,7 @@ function Json.encode(val)
     return "null"
 end
 
-function Json.decode(str)
+function JsonUtility.decode(str)
     if not str or str == "" then return nil, "Empty string" end
     str = tostring(str)
 
@@ -219,4 +219,4 @@ function Json.decode(str)
     return result, err
 end
 
-return Json
+return JsonUtility

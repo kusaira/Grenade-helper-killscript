@@ -1,51 +1,40 @@
 -- ============================================================================
--- GrenadeHelper - Lineup Storage & Tick-Based Macro Playback Engine
+-- GrenadeHelper - Lineup Storage & Tick-Based Macro Playback Engine Class
 -- ============================================================================
 
 local ActionCodec = require("action_codec")
 local MathUtils   = require("math_utils")
 
-local CreateVector3     = MathUtils.CreateVector3
-local CreateVector2     = MathUtils.CreateVector2
-local CalculateDistance = MathUtils.CalculateDistance
-local AngleDiffDegrees  = MathUtils.AngleDiffDegrees
+local LineupService = {
+    PREROLL_MAX_SPEED = 0.15,
+    PREROLL_STABLE_TICKS_REQUIRED = 2,
+    SETTLE_DELAY_TICKS = 12,
+    ActionsDecodeCache = {},
+    LineupsSummaryCache = {},
+    LastEquipTryTime = 0,
+    PendingEquipButton = nil,
+    PlaybackState = {
+        Lineup               = nil,
+        PreRollDone          = false,
+        StartTick            = nil,
+        LockTick             = nil,
+        StableTicks          = 0,
+        PostAlignSettleTicks = 0,
+        NextEventIndex       = 1,
+        Current              = { move = { x = 0, y = 0 }, look = { x = 0, y = 0 }, jump = false, crouch = false, fire = false, altFire = false },
+    }
+}
 
-local LineupService = {}
-
--- Below this speed, residual velocity counts as "stopped" for pre-roll
--- purposes - used both as the brake-until threshold in AlignPositionToTarget
--- and as part of the stability gate in UpdatePlayback.
-local PREROLL_MAX_SPEED = 0.15
-
--- Consecutive frames the position+aim+near-zero-velocity condition must hold
--- before tick playback is allowed to start.
-local PREROLL_STABLE_TICKS_REQUIRED = 2
-
--- Additional settling ticks (~200ms) after standing up for standing throw macros
-local SETTLE_DELAY_TICKS = 12
-
--- Decoded action tracks are cached by lineup id, never written back into
--- Storage: Storage keeps only the compact `actionsData` hex string, so a
--- decoded table sitting next to it would double what actually gets saved.
-local ActionsDecodeCache = {}
-
--- GetAllLineups is called multiple times per frame (main.lua's
--- FindActiveLineup, HUD:Render), and previously rebuilt a full array of new
--- tables every single call. The summary only actually changes when a lineup
--- is saved/deleted/renamed/re-recorded or imported, so it's cached per map
--- and only rebuilt on those events.
-local LineupsSummaryCache = {}
-
-local function GetDecodedActions(id, item)
+function LineupService:GetDecodedActions(id, item)
     if not item.actionsData or item.actionsData == "" then return nil end
-    local cached = ActionsDecodeCache[id]
+    local cached = self.ActionsDecodeCache[id]
     if cached then return cached end
     local decoded = ActionCodec.Decode(item.actionsData)
-    ActionsDecodeCache[id] = decoded
+    self.ActionsDecodeCache[id] = decoded
     return decoded
 end
 
-local function GetInitialLineupCrouch(lineup)
+function LineupService:GetInitialLineupCrouch(lineup)
     if not lineup or not lineup.actions or not lineup.actions.events then return false end
     for _, ev in ipairs(lineup.actions.events) do
         if ev and ev.t and ev.t > 10 then break end
@@ -58,10 +47,10 @@ end
 
 function LineupService:InvalidateCaches(mapName)
     if mapName then
-        LineupsSummaryCache[mapName] = nil
+        self.LineupsSummaryCache[mapName] = nil
     else
-        for k in pairs(LineupsSummaryCache) do LineupsSummaryCache[k] = nil end
-        for k in pairs(ActionsDecodeCache) do ActionsDecodeCache[k] = nil end
+        for k in pairs(self.LineupsSummaryCache) do self.LineupsSummaryCache[k] = nil end
+        for k in pairs(self.ActionsDecodeCache) do self.ActionsDecodeCache[k] = nil end
     end
 
     if Storage then
@@ -70,27 +59,27 @@ function LineupService:InvalidateCaches(mapName)
     end
 end
 
-local function SafeGetCurrentItem(agent)
+function LineupService:SafeGetCurrentItem(agent)
     if not agent or not agent.Inventory then return nil end
     return agent.Inventory.CurrentItem
 end
 
-local function SafeIsSwitching(agent)
+function LineupService:SafeIsSwitching(agent)
     if not agent or not agent.Inventory then return false end
     return agent.Inventory.IsSwitching == true
 end
 
-local function SafeGetItemName(item)
+function LineupService:SafeGetItemName(item)
     if not item then return "" end
     return item.Name or ""
 end
 
-local function SafeIsThrowable(item)
+function LineupService:SafeIsThrowable(item)
     if not item then return false end
     return (item.IsThrowable == true or item.IsBridgeCharge == true)
 end
 
-local function StandardizeGrenadeKey(str)
+function LineupService:StandardizeGrenadeKey(str)
     if not str or str == "" then return "" end
     local lower = tostring(str):lower()
     if lower:find("power") or lower:find("powershell") then return "powershell" end
@@ -102,10 +91,10 @@ local function StandardizeGrenadeKey(str)
     return lower
 end
 
-local function GetExactGrenadeKey(item)
+function LineupService:GetExactGrenadeKey(item)
     if not item then return "" end
 
-    local name = SafeGetItemName(item):lower()
+    local name = self:SafeGetItemName(item):lower()
 
     if item.IsBridgeCharge then return "shield" end
     if name:find("power") or name:find("powershell") then return "powershell" end
@@ -135,7 +124,7 @@ end
 function LineupService:GetCurrentMapName(agent)
     if MapInfo then
         local rawName = MapInfo.MapName
-        if not rawName and type(MapInfo.GetMapName) == "function" then
+        if not rawName and MapInfo.GetMapName then
             rawName = MapInfo:GetMapName()
         end
         if rawName and tostring(rawName) ~= "" then
@@ -187,7 +176,7 @@ function LineupService:SetCurrentMapName(mapName)
     self:InvalidateCaches()
 end
 
-local function EnsureStorageStructure()
+function LineupService:EnsureStorageStructure()
     if not Storage then return end
     local modified = false
     if not Storage.LineupsByMap then
@@ -227,7 +216,7 @@ local function EnsureStorageStructure()
     end
 end
 
-local function CommitLineupsForMap(mapName, lineups)
+function LineupService:CommitLineupsForMap(mapName, lineups)
     if not Storage then return end
     local lineupsByMap = Storage.LineupsByMap or {}
     lineupsByMap[mapName] = lineups
@@ -238,12 +227,12 @@ function LineupService:GetAllLineups(mapName)
     local targetMap = mapName or self:GetCurrentMapName()
     local storageRevision = tonumber(Storage and Storage.GrenadeHelperLineupsRevision) or 0
 
-    local cached = LineupsSummaryCache[targetMap]
+    local cached = self.LineupsSummaryCache[targetMap]
     if cached and cached.revision == storageRevision then
         return cached.items
     end
 
-    EnsureStorageStructure()
+    self:EnsureStorageStructure()
     local saved = (Storage and Storage.LineupsByMap and Storage.LineupsByMap[targetMap]) or {}
     local result = {}
     for idx, item in ipairs(saved) do
@@ -255,16 +244,16 @@ function LineupService:GetAllLineups(mapName)
                 description   = item.description or ("Lineup " .. tostring(idx)),
                 grenadeType   = item.grenadeType or "Grenade",
                 mapName       = item.mapName or targetMap,
-                standPosition = CreateVector3(item.standX or 0, item.standY or 0, item.standZ or 0),
+                standPosition = MathUtils:CreateVector3(item.standX or 0, item.standY or 0, item.standZ or 0),
                 pitch         = item.pitch or 0,
                 yaw           = item.yaw or 0,
                 actionsData   = item.actionsData,
-                actions       = nil -- Decoded lazily on demand when active
+                actions       = nil
             })
         end
     end
 
-    LineupsSummaryCache[targetMap] = {
+    self.LineupsSummaryCache[targetMap] = {
         revision = storageRevision,
         items = result,
     }
@@ -277,9 +266,9 @@ function LineupService:CaptureBaseline(agent)
         return nil, "Agent position is unavailable"
     end
 
-    local currentItem = SafeGetCurrentItem(agent)
-    local currentKey = GetExactGrenadeKey(currentItem)
-    local currentName = SafeGetItemName(currentItem)
+    local currentItem = self:SafeGetCurrentItem(agent)
+    local currentKey = self:GetExactGrenadeKey(currentItem)
+    local currentName = self:SafeGetItemName(currentItem)
 
     if currentKey == "powershell" then currentName = "PowerShell Grenade"
     elseif currentKey == "shield" then currentName = "Shield Grenade"
@@ -298,7 +287,7 @@ function LineupService:CaptureBaseline(agent)
     local pos = agent.Movement.Position
 
     return {
-        pos         = CreateVector3(pos.x, pos.y, pos.z),
+        pos         = MathUtils:CreateVector3(pos.x, pos.y, pos.z),
         pitch       = lookRot.x or 0,
         yaw         = lookRot.y or 0,
         grenadeName = currentName,
@@ -307,7 +296,7 @@ end
 
 function LineupService:SaveRecordedLineup(baseline, actionsTrack, mapName, rerecordId)
     if not baseline then return nil, "Missing baseline" end
-    EnsureStorageStructure()
+    self:EnsureStorageStructure()
     local targetMap = mapName or self:GetCurrentMapName()
 
     if not Storage then return nil, "Storage is unavailable" end
@@ -323,8 +312,8 @@ function LineupService:SaveRecordedLineup(baseline, actionsTrack, mapName, rerec
                 item.pitch, item.yaw = baseline.pitch, baseline.yaw
                 item.grenadeType = baseline.grenadeName
                 item.actionsData = ActionCodec.Encode(actionsTrack)
-                CommitLineupsForMap(targetMap, list)
-                ActionsDecodeCache[item.id] = actionsTrack
+                self:CommitLineupsForMap(targetMap, list)
+                self.ActionsDecodeCache[item.id] = actionsTrack
                 self:InvalidateCaches(targetMap)
                 return { id = item.id, description = item.description, grenadeType = item.grenadeType, mapName = targetMap }, nil
             end
@@ -353,20 +342,20 @@ function LineupService:SaveRecordedLineup(baseline, actionsTrack, mapName, rerec
     }
 
     table.insert(list, newItem)
-    CommitLineupsForMap(targetMap, list)
-    ActionsDecodeCache[uniqueId] = actionsTrack
+    self:CommitLineupsForMap(targetMap, list)
+    self.ActionsDecodeCache[uniqueId] = actionsTrack
     self:InvalidateCaches(targetMap)
 
     return { id = uniqueId, description = defaultDesc, grenadeType = newItem.grenadeType, mapName = targetMap }, nil
 end
 
 function LineupService:DeleteSavedLineup(index, mapName)
-    EnsureStorageStructure()
+    self:EnsureStorageStructure()
     local targetMap = mapName or self:GetCurrentMapName()
     local currentLineups = Storage and Storage.LineupsByMap and Storage.LineupsByMap[targetMap] or {}
     if index and currentLineups[index] then
         table.remove(currentLineups, index)
-        CommitLineupsForMap(targetMap, currentLineups)
+        self:CommitLineupsForMap(targetMap, currentLineups)
         self:InvalidateCaches(targetMap)
         return true
     end
@@ -374,7 +363,7 @@ function LineupService:DeleteSavedLineup(index, mapName)
 end
 
 function LineupService:DeleteLineupById(id, mapName)
-    EnsureStorageStructure()
+    self:EnsureStorageStructure()
     local targetMap = mapName or self:GetCurrentMapName()
     local currentLineups = Storage and Storage.LineupsByMap and Storage.LineupsByMap[targetMap] or {}
     local targetIdStr = tostring(id)
@@ -382,7 +371,7 @@ function LineupService:DeleteLineupById(id, mapName)
         local itemIdStr = item.id and tostring(item.id) or ("Lineup_" .. tostring(idx))
         if itemIdStr == targetIdStr or tostring(idx) == targetIdStr then
             table.remove(currentLineups, idx)
-            CommitLineupsForMap(targetMap, currentLineups)
+            self:CommitLineupsForMap(targetMap, currentLineups)
             self:InvalidateCaches(targetMap)
             return true
         end
@@ -391,7 +380,7 @@ function LineupService:DeleteLineupById(id, mapName)
 end
 
 function LineupService:RenameLineupById(id, newName, mapName)
-    EnsureStorageStructure()
+    self:EnsureStorageStructure()
     local targetMap = mapName or self:GetCurrentMapName()
     local currentLineups = Storage and Storage.LineupsByMap and Storage.LineupsByMap[targetMap] or {}
     local targetIdStr = tostring(id)
@@ -399,7 +388,7 @@ function LineupService:RenameLineupById(id, newName, mapName)
         local itemIdStr = item.id and tostring(item.id) or ("Lineup_" .. tostring(idx))
         if itemIdStr == targetIdStr or tostring(idx) == targetIdStr then
             item.description = newName
-            CommitLineupsForMap(targetMap, currentLineups)
+            self:CommitLineupsForMap(targetMap, currentLineups)
             self:InvalidateCaches(targetMap)
             return true
         end
@@ -410,18 +399,18 @@ end
 LineupService.DeleteLineup = LineupService.DeleteSavedLineup
 
 function LineupService:GetCurrentGrenadeKey(agent)
-    local currentItem = SafeGetCurrentItem(agent)
-    if not currentItem or not SafeIsThrowable(currentItem) then
+    local currentItem = self:SafeGetCurrentItem(agent)
+    if not currentItem or not self:SafeIsThrowable(currentItem) then
         return "", false
     end
-    return GetExactGrenadeKey(currentItem), true
+    return self:GetExactGrenadeKey(currentItem), true
 end
 
 function LineupService:MatchesGrenadeKey(currentKey, isThrowable, grenadeType)
     if not grenadeType or grenadeType == "" then return true end
     if not isThrowable then return false end
 
-    local targetKey = StandardizeGrenadeKey(grenadeType)
+    local targetKey = self:StandardizeGrenadeKey(grenadeType)
     return (currentKey ~= "" and targetKey ~= "" and currentKey == targetKey)
 end
 
@@ -438,10 +427,10 @@ function LineupService:FindActiveLineup(agent, maxDistance, mapName)
     local targetMap  = mapName or self:GetCurrentMapName()
     local mapLineups = self:GetAllLineups(targetMap)
 
-    local currentItem = SafeGetCurrentItem(agent)
+    local currentItem = self:SafeGetCurrentItem(agent)
     local isGrenadeEquipped = true
     if currentItem then
-        isGrenadeEquipped = self:IsAllowedGrenade(SafeGetItemName(currentItem), currentItem)
+        isGrenadeEquipped = self:IsAllowedGrenade(self:SafeGetItemName(currentItem), currentItem)
     end
 
     local currentKey, isThrowable = self:GetCurrentGrenadeKey(agent)
@@ -458,15 +447,12 @@ function LineupService:FindActiveLineup(agent, maxDistance, mapName)
     for _, lineup in ipairs(mapLineups) do
         local hasActions = (lineup.actionsData and lineup.actionsData ~= "") or (lineup.actions ~= nil)
         if hasActions and self:MatchesGrenadeKey(currentKey, isThrowable, lineup.grenadeType) then
-            local dist = CalculateDistance(currentPos, lineup.standPosition)
+            local dist = MathUtils:CalculateDistance(currentPos, lineup.standPosition)
             if dist <= maxDistLimit then
-                local yawDiff   = AngleDiffDegrees(currentYaw, lineup.yaw or 0)
+                local yawDiff   = MathUtils:AngleDiffDegrees(currentYaw, lineup.yaw or 0)
                 local pitchDiff = math.abs(currentPitch - (lineup.pitch or 0))
                 local angleDiff = math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff)
 
-                -- Score combines standing distance with crosshair aiming angle alignment.
-                -- Aiming angle alignment takes heavy precedence so the crosshair selects
-                -- the exact target in the sky the player is pointing at.
                 local score = angleDiff + (dist * 3.0)
 
                 if score < bestScore then
@@ -479,7 +465,7 @@ function LineupService:FindActiveLineup(agent, maxDistance, mapName)
     end
 
     if closestLineup and not closestLineup.actions and closestLineup.actionsData then
-        closestLineup.actions = GetDecodedActions(closestLineup.id, closestLineup)
+        closestLineup.actions = self:GetDecodedActions(closestLineup.id, closestLineup)
     end
 
     return closestLineup, minDistance, isGrenadeEquipped
@@ -491,7 +477,7 @@ function LineupService:AlignAimToTarget(agent, lineup)
     local pitchVal = lineup.pitch or 0
     local yawVal   = lineup.yaw   or 0
 
-    local rotVec = CreateVector2(pitchVal, yawVal)
+    local rotVec = MathUtils:CreateVector2(pitchVal, yawVal)
     if AgentInput and AgentInput.SetLookRotation then
         AgentInput:SetLookRotation(rotVec)
     end
@@ -517,13 +503,12 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local rightX   = math.cos(yawRad)
     local rightZ   = -math.sin(yawRad)
 
-    -- Ultra high-precision fixation threshold (0.02m = 2cm)
     if distance <= 0.02 then
         local vel = agent.Movement.Velocity
         local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
         local speed = math.sqrt(velX * velX + velZ * velZ)
 
-        if speed <= PREROLL_MAX_SPEED then
+        if speed <= self.PREROLL_MAX_SPEED then
             self:StopPositionAlign()
             return true
         end
@@ -531,7 +516,7 @@ function LineupService:AlignPositionToTarget(agent, lineup)
         local brakeX = -(velX * rightX + velZ * rightZ) / speed
         local brakeY = -(velX * forwardX + velZ * forwardZ) / speed
         if AgentInput and AgentInput.SetMoveDirection then
-            AgentInput:SetMoveDirection(CreateVector2(brakeX, brakeY))
+            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX, brakeY))
         end
         return false
     end
@@ -541,21 +526,20 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local moveY = (dx * forwardX + dz * forwardZ) * inv
 
     if AgentInput and AgentInput.SetMoveDirection then
-        AgentInput:SetMoveDirection(CreateVector2(moveX, moveY))
+        AgentInput:SetMoveDirection(MathUtils:CreateVector2(moveX, moveY))
     end
     return false
 end
 
 function LineupService:StopPositionAlign()
     if AgentInput and AgentInput.SetMoveDirection then
-        AgentInput:SetMoveDirection(CreateVector2(0, 0))
+        AgentInput:SetMoveDirection(MathUtils:CreateVector2(0, 0))
     end
 end
 
-local function SafeGetEnum(enumTbl, name)
+function LineupService:SafeGetEnum(enumTbl, name)
     if not enumTbl or not name then return nil end
-    local ok, val = pcall(function() return enumTbl[name] end)
-    return ok and val or nil
+    return enumTbl[name]
 end
 
 function LineupService:GetInputButtonForGrenade(grenadeType)
@@ -563,39 +547,36 @@ function LineupService:GetInputButtonForGrenade(grenadeType)
     local lowerStr = tostring(grenadeType):lower()
 
     if lowerStr:find("frag") or lowerStr:find("he") or lowerStr:find("fragment") then
-        return SafeGetEnum(EInputButton, "FragGrenade")
+        return self:SafeGetEnum(EInputButton, "FragGrenade")
     elseif lowerStr:find("bridge") or lowerStr:find("charge") or lowerStr:find("shield") or lowerStr:find("barrier") then
-        return SafeGetEnum(EInputButton, "BridgeCharge") or SafeGetEnum(EInputButton, "PowerShell")
+        return self:SafeGetEnum(EInputButton, "BridgeCharge") or self:SafeGetEnum(EInputButton, "PowerShell")
     elseif lowerStr:find("power") or lowerStr:find("powershell") then
-        return SafeGetEnum(EInputButton, "PowerShell") or SafeGetEnum(EInputButton, "BridgeCharge")
+        return self:SafeGetEnum(EInputButton, "PowerShell") or self:SafeGetEnum(EInputButton, "BridgeCharge")
     elseif lowerStr:find("incendiary") or lowerStr:find("molotov") or lowerStr:find("fire") or lowerStr:find("thermite") then
-        return SafeGetEnum(EInputButton, "Incendiary")
+        return self:SafeGetEnum(EInputButton, "Incendiary")
     elseif lowerStr:find("sonar") then
-        return SafeGetEnum(EInputButton, "Sonar")
+        return self:SafeGetEnum(EInputButton, "Sonar")
     elseif lowerStr:find("emp") then
-        return SafeGetEnum(EInputButton, "EmpGrenade")
+        return self:SafeGetEnum(EInputButton, "EmpGrenade")
     end
 
-    return SafeGetEnum(EInputButton, "CycleGrenade")
+    return self:SafeGetEnum(EInputButton, "CycleGrenade")
 end
-
-local LastEquipTryTime = 0
-local PendingEquipButton = nil
 
 function LineupService:EquipGrenadeForLineup(agent, lineup)
     if not agent or not lineup then return end
     if not AgentInput or not AgentInput.SetButtonState then return end
 
-    if PendingEquipButton then
-        AgentInput:SetButtonState(PendingEquipButton, false)
-        PendingEquipButton = nil
+    if self.PendingEquipButton then
+        AgentInput:SetButtonState(self.PendingEquipButton, false)
+        self.PendingEquipButton = nil
     end
 
-    if SafeIsSwitching(agent) then return end
+    if self:SafeIsSwitching(agent) then return end
 
     local lineupType = tostring(lineup.grenadeType or ""):lower()
-    local currentItem = SafeGetCurrentItem(agent)
-    local currentName = SafeGetItemName(currentItem)
+    local currentItem = self:SafeGetCurrentItem(agent)
+    local currentName = self:SafeGetItemName(currentItem)
 
     if currentName ~= "" then
         local lowerName = currentName:lower()
@@ -605,39 +586,25 @@ function LineupService:EquipGrenadeForLineup(agent, lineup)
     end
 
     local now = (Time and Time.Seconds) or 0
-    if now - LastEquipTryTime < 0.20 then return end
-    LastEquipTryTime = now
+    if now - self.LastEquipTryTime < 0.20 then return end
+    self.LastEquipTryTime = now
 
     local btn = self:GetInputButtonForGrenade(lineup.grenadeType)
     if btn then
         AgentInput:SetButtonState(btn, true)
-        PendingEquipButton = btn
+        self.PendingEquipButton = btn
     end
 end
 
--- ============================================================================
--- Macro playback (tick-indexed action-track replay)
--- ============================================================================
-
-local PlaybackState = {
-    Lineup               = nil,
-    PreRollDone          = false,
-    StartTick            = nil,
-    LockTick             = nil,
-    StableTicks          = 0,
-    PostAlignSettleTicks = 0,
-    NextEventIndex       = 1,
-    Current              = { move = { x = 0, y = 0 }, look = { x = 0, y = 0 }, jump = false, crouch = false, fire = false, altFire = false },
-}
-
 function LineupService:LockActiveLineup(agent, mapName)
-    PlaybackState.Lineup               = nil
-    PlaybackState.PreRollDone          = false
-    PlaybackState.StartTick            = nil
-    PlaybackState.NextEventIndex       = 1
-    PlaybackState.LockTick             = (Time and Time.Tick) or 0
-    PlaybackState.StableTicks          = 0
-    PlaybackState.PostAlignSettleTicks = 0
+    local ps = self.PlaybackState
+    ps.Lineup               = nil
+    ps.PreRollDone          = false
+    ps.StartTick            = nil
+    ps.NextEventIndex       = 1
+    ps.LockTick             = (Time and Time.Tick) or 0
+    ps.StableTicks          = 0
+    ps.PostAlignSettleTicks = 0
 
     if not agent or not agent.Movement or not agent.Movement.Position then return nil end
 
@@ -658,9 +625,9 @@ function LineupService:LockActiveLineup(agent, mapName)
     for _, candidate in ipairs(mapLineups) do
         local hasActions = (candidate.actionsData and candidate.actionsData ~= "") or (candidate.actions ~= nil)
         if hasActions and self:MatchesGrenadeKey(currentKey, isThrowable, candidate.grenadeType) then
-            local dist = CalculateDistance(currentPos, candidate.standPosition)
+            local dist = MathUtils:CalculateDistance(currentPos, candidate.standPosition)
             if dist <= searchRadius then
-                local yawDiff   = AngleDiffDegrees(currentYaw, candidate.yaw or 0)
+                local yawDiff   = MathUtils:AngleDiffDegrees(currentYaw, candidate.yaw or 0)
                 local pitchDiff = math.abs(currentPitch - (candidate.pitch or 0))
                 local angleDiff = math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff)
 
@@ -676,21 +643,22 @@ function LineupService:LockActiveLineup(agent, mapName)
     end
 
     if best and not best.actions and best.actionsData then
-        best.actions = GetDecodedActions(best.id, best)
+        best.actions = self:GetDecodedActions(best.id, best)
     end
 
-    PlaybackState.Lineup = best
+    ps.Lineup = best
     return best
 end
 
 function LineupService:GetLockedLineup()
-    return PlaybackState.Lineup
+    return self.PlaybackState.Lineup
 end
 
 function LineupService:ResolveStateAtTick(track, elapsed)
-    local cur = PlaybackState.Current
+    local ps = self.PlaybackState
+    local cur = ps.Current
     local events = track.events
-    local idx = PlaybackState.NextEventIndex
+    local idx = ps.NextEventIndex
 
     while events[idx] and events[idx].t <= elapsed do
         local fields = events[idx].fields
@@ -703,7 +671,7 @@ function LineupService:ResolveStateAtTick(track, elapsed)
         idx = idx + 1
     end
 
-    PlaybackState.NextEventIndex = idx
+    ps.NextEventIndex = idx
     return cur
 end
 
@@ -717,22 +685,23 @@ function LineupService:StopAlignment()
         if EInputButton.AlternateFire then AgentInput:SetButtonState(EInputButton.AlternateFire, false) end
     end
 
-    if PendingEquipButton and AgentInput and AgentInput.SetButtonState then
-        AgentInput:SetButtonState(PendingEquipButton, false)
-        PendingEquipButton = nil
+    if self.PendingEquipButton and AgentInput and AgentInput.SetButtonState then
+        AgentInput:SetButtonState(self.PendingEquipButton, false)
+        self.PendingEquipButton = nil
     end
 
-    PlaybackState.Lineup               = nil
-    PlaybackState.PreRollDone          = false
-    PlaybackState.StartTick            = nil
-    PlaybackState.LockTick             = nil
-    PlaybackState.StableTicks          = 0
-    PlaybackState.PostAlignSettleTicks = 0
-    PlaybackState.NextEventIndex       = 1
-    PlaybackState.Current              = { move = { x = 0, y = 0 }, look = { x = 0, y = 0 }, jump = false, crouch = false, fire = false, altFire = false }
+    local ps = self.PlaybackState
+    ps.Lineup               = nil
+    ps.PreRollDone          = false
+    ps.StartTick            = nil
+    ps.LockTick             = nil
+    ps.StableTicks          = 0
+    ps.PostAlignSettleTicks = 0
+    ps.NextEventIndex       = 1
+    ps.Current              = { move = { x = 0, y = 0 }, look = { x = 0, y = 0 }, jump = false, crouch = false, fire = false, altFire = false }
 end
 
-local function HasThrowEvent(track)
+function LineupService:HasThrowEvent(track)
     if not track or not track.events then return false end
     for _, ev in ipairs(track.events) do
         if ev and ev.fields then
@@ -745,24 +714,24 @@ local function HasThrowEvent(track)
 end
 
 function LineupService:UpdatePlayback(agent)
-    local lineup = PlaybackState.Lineup
+    local ps = self.PlaybackState
+    local lineup = ps.Lineup
     if not lineup or not lineup.actions then return false end
 
     self:EquipGrenadeForLineup(agent, lineup)
 
-    local currentItem = SafeGetCurrentItem(agent)
-    local isSwitching = SafeIsSwitching(agent)
+    local currentItem = self:SafeGetCurrentItem(agent)
+    local isSwitching = self:SafeIsSwitching(agent)
     local currentKey, isThrowable = self:GetCurrentGrenadeKey(agent)
     local grenadeReady = isThrowable and not isSwitching and self:MatchesGrenadeKey(currentKey, isThrowable, lineup.grenadeType)
 
-    if not PlaybackState.PreRollDone then
-        local preRollTicks = ((Time and Time.Tick) or 0) - (PlaybackState.LockTick or 0)
+    if not ps.PreRollDone then
+        local preRollTicks = ((Time and Time.Tick) or 0) - (ps.LockTick or 0)
         local forced = preRollTicks > 120
 
-        local targetCrouch = GetInitialLineupCrouch(lineup)
+        local targetCrouch = self:GetInitialLineupCrouch(lineup)
 
-        -- Phase 2: Post-align settling phase (Match initial recorded posture)
-        if PlaybackState.PostAlignSettleTicks > 0 then
+        if ps.PostAlignSettleTicks > 0 then
             if EInputButton and EInputButton.Crouch and AgentInput and AgentInput.SetButtonState then
                 AgentInput:SetButtonState(EInputButton.Crouch, targetCrouch)
             end
@@ -770,15 +739,15 @@ function LineupService:UpdatePlayback(agent)
             self:StopPositionAlign()
             self:AlignAimToTarget(agent, lineup)
 
-            PlaybackState.PostAlignSettleTicks = PlaybackState.PostAlignSettleTicks + 1
+            ps.PostAlignSettleTicks = ps.PostAlignSettleTicks + 1
 
-            local requiredSettle = targetCrouch and 1 or SETTLE_DELAY_TICKS
+            local requiredSettle = targetCrouch and 1 or self.SETTLE_DELAY_TICKS
 
-            if (PlaybackState.PostAlignSettleTicks >= requiredSettle and grenadeReady) or forced then
-                PlaybackState.PreRollDone    = true
-                PlaybackState.StartTick      = (Time and Time.Tick) or 0
-                PlaybackState.NextEventIndex = 1
-                PlaybackState.Current = {
+            if (ps.PostAlignSettleTicks >= requiredSettle and grenadeReady) or forced then
+                ps.PreRollDone    = true
+                ps.StartTick      = (Time and Time.Tick) or 0
+                ps.NextEventIndex = 1
+                ps.Current = {
                     move = { x = 0, y = 0 }, look = { x = lineup.pitch or 0, y = lineup.yaw or 0 },
                     jump = false, crouch = targetCrouch, fire = false, altFire = false,
                 }
@@ -786,7 +755,6 @@ function LineupService:UpdatePlayback(agent)
             return true
         end
 
-        -- Phase 1: High-Speed Adaptive Approach
         local currentPos = agent and agent.Movement and agent.Movement.Position
         local targetPos  = lineup and lineup.standPosition
         local distToTarget = 99.0
@@ -808,7 +776,7 @@ function LineupService:UpdatePlayback(agent)
         local lookRot = AgentInput and AgentInput.GetLookRotation and AgentInput:GetLookRotation()
         if lookRot then
             local pitchDiff = math.abs((lookRot.x or 0) - (lineup.pitch or 0))
-            local yawDiff = AngleDiffDegrees(lookRot.y or 0, lineup.yaw or 0)
+            local yawDiff = MathUtils:AngleDiffDegrees(lookRot.y or 0, lineup.yaw or 0)
             reachedAim = pitchDiff <= 0.25 and yawDiff <= 0.25
         end
 
@@ -817,22 +785,22 @@ function LineupService:UpdatePlayback(agent)
         end
 
         if reachedPos and reachedAim and (grenadeReady or forced) then
-            PlaybackState.StableTicks = PlaybackState.StableTicks + 1
+            ps.StableTicks = ps.StableTicks + 1
         else
-            PlaybackState.StableTicks = 0
+            ps.StableTicks = 0
         end
 
-        if PlaybackState.StableTicks >= PREROLL_STABLE_TICKS_REQUIRED or forced then
+        if ps.StableTicks >= self.PREROLL_STABLE_TICKS_REQUIRED or forced then
             self:StopPositionAlign()
-            PlaybackState.PostAlignSettleTicks = 1
+            ps.PostAlignSettleTicks = 1
         end
 
         return true
     end
 
-    local elapsed = ((Time and Time.Tick) or 0) - PlaybackState.StartTick
+    local elapsed = ((Time and Time.Tick) or 0) - ps.StartTick
     local duration = (lineup.actions and lineup.actions.durationTicks) or 0
-    if duration <= 1 then duration = 6 end -- Ensure minimum playback duration for short tracks
+    if duration <= 1 then duration = 6 end
 
     if elapsed >= duration then
         self:StopAlignment()
@@ -840,10 +808,10 @@ function LineupService:UpdatePlayback(agent)
     end
 
     local state = self:ResolveStateAtTick(lineup.actions, elapsed)
-    local fallbackThrow = not HasThrowEvent(lineup.actions) and (elapsed >= 0 and elapsed <= 5)
+    local fallbackThrow = not self:HasThrowEvent(lineup.actions) and (elapsed >= 0 and elapsed <= 5)
 
     if AgentInput and AgentInput.SetMoveDirection then
-        AgentInput:SetMoveDirection(CreateVector2(state.move.x, state.move.y))
+        AgentInput:SetMoveDirection(MathUtils:CreateVector2(state.move.x, state.move.y))
     end
     if AgentInput and AgentInput.SetButtonState and EInputButton then
         if EInputButton.Jump then AgentInput:SetButtonState(EInputButton.Jump, state.jump == true) end
@@ -856,7 +824,7 @@ function LineupService:UpdatePlayback(agent)
         if EInputButton.AlternateFire then AgentInput:SetButtonState(EInputButton.AlternateFire, doAltFire) end
     end
     if AgentInput and AgentInput.SetLookRotation then
-        AgentInput:SetLookRotation(CreateVector2(state.look.x, state.look.y))
+        AgentInput:SetLookRotation(MathUtils:CreateVector2(state.look.x, state.look.y))
     end
 
     return true
