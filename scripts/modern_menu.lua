@@ -10,6 +10,8 @@ local ActionCodec   = require("action_codec")
 local ModernMenu = {
     PANEL_WIDTH  = 920,
     PANEL_HEIGHT = 540,
+    ITEMS_PER_PAGE = 6,
+    CurrentListPage = 1,
     Root = nil,
     Panel = nil,
     IsOpenState = false,
@@ -250,7 +252,26 @@ function ModernMenu:RefreshLineupsList()
         end
     end
 
-    if not lineups or #lineups == 0 then
+    local totalItems = #lineups
+    local itemsPerPage = self.ITEMS_PER_PAGE or 6
+    local totalPages = math.max(1, math.ceil(totalItems / itemsPerPage))
+
+    if not self.CurrentListPage or self.CurrentListPage < 1 then
+        self.CurrentListPage = 1
+    elseif self.CurrentListPage > totalPages then
+        self.CurrentListPage = totalPages
+    end
+
+    local pageLabel = self:Find("lblM2PageIndicator")
+    if pageLabel then
+        if totalItems == 0 then
+            pageLabel.text = "PAGE 1 / 1 (0 SPOTS)"
+        else
+            pageLabel.text = string.format("PAGE %d / %d (%d SPOTS)", self.CurrentListPage, totalPages, totalItems)
+        end
+    end
+
+    if not lineups or totalItems == 0 then
         if emptyLabel then
             emptyLabel.visible = true
             if emptyLabel.style and DisplayStyle then
@@ -279,7 +300,17 @@ function ModernMenu:RefreshLineupsList()
         return
     end
 
-    for index, item in ipairs(lineups) do
+    local startIndex = (self.CurrentListPage - 1) * itemsPerPage + 1
+    local endIndex = math.min(totalItems, startIndex + itemsPerPage - 1)
+    local pageItems = {}
+    for i = startIndex, endIndex do
+        table.insert(pageItems, { item = lineups[i], globalIndex = i })
+    end
+
+    for index, record in ipairs(pageItems) do
+        local item = record.item
+        local globalIdx = record.globalIndex
+
         local poolItem = self.LineupRowPool[index]
         if not poolItem or not poolItem.indexLabel then
             local row = UI:CreateVisualElement()
@@ -354,7 +385,7 @@ function ModernMenu:RefreshLineupsList()
         end
 
         if poolItem.indexLabel then
-            poolItem.indexLabel.text = string.format("#%02d", index)
+            poolItem.indexLabel.text = string.format("#%02d", globalIdx)
         end
 
         if poolItem.titleLabel then
@@ -429,7 +460,7 @@ function ModernMenu:RefreshLineupsList()
         end
     end
 
-    for i = #lineups + 1, #self.LineupRowPool do
+    for i = #pageItems + 1, #self.LineupRowPool do
         local poolItem = self.LineupRowPool[i]
         if poolItem and poolItem.row then
             poolItem.row.visible = false
@@ -919,6 +950,33 @@ function ModernMenu.Init()
         if btnClose.EnableMouseEvents then btnClose:EnableMouseEvents() end
         if btnClose.SetCursor then btnClose:SetCursor("hand") end
         if btnClose.OnClick then btnClose:OnClick(function() ModernMenu:Close() end) end
+    end
+
+    local btnPrev = ModernMenu:Find("btnM2PrevPage")
+    local btnNext = ModernMenu:Find("btnM2NextPage")
+
+    if btnPrev then
+        if btnPrev.EnableMouseEvents then btnPrev:EnableMouseEvents() end
+        if btnPrev.SetCursor then btnPrev:SetCursor("hand") end
+        if btnPrev.OnClick then
+            btnPrev:OnClick(function()
+                if ModernMenu.CurrentListPage > 1 then
+                    ModernMenu.CurrentListPage = ModernMenu.CurrentListPage - 1
+                    ModernMenu:RefreshLineupsList()
+                end
+            end)
+        end
+    end
+
+    if btnNext then
+        if btnNext.EnableMouseEvents then btnNext:EnableMouseEvents() end
+        if btnNext.SetCursor then btnNext:SetCursor("hand") end
+        if btnNext.OnClick then
+            btnNext:OnClick(function()
+                ModernMenu.CurrentListPage = ModernMenu.CurrentListPage + 1
+                ModernMenu:RefreshLineupsList()
+            end)
+        end
     end
 
     for _, item in ipairs(ModernMenu.FilterButtons) do
