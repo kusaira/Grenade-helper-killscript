@@ -21,12 +21,7 @@
 
             <!-- MAIN BODY -->
             <ui:VisualElement class="aio2-main">
-                <ui:VisualElement class="cmd-prompt-line">
-                    <ui:Label text="SYSTEM ::" class="cmd-path" />
-                    <ui:Label text=" ACTIVE CONTROL PANEL" class="cmd-command" />
-                </ui:VisualElement>
 
-                <ui:Label text="KillScript Sandbox Tactical Grenade Assistant module by @Keqqyrr" class="cmd-banner" />
 
                 <ui:VisualElement class="aio2-content">
                     
