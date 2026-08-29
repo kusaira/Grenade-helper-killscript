@@ -10,7 +10,7 @@ local ActionCodec   = require("action_codec")
 local ModernMenu = {
     PANEL_WIDTH  = 920,
     PANEL_HEIGHT = 540,
-    ITEMS_PER_PAGE = 6,
+    ITEMS_PER_PAGE = 12,
     CurrentListPage = 1,
     Root = nil,
     Panel = nil,
@@ -253,7 +253,7 @@ function ModernMenu:RefreshLineupsList()
     end
 
     local totalItems = #lineups
-    local itemsPerPage = self.ITEMS_PER_PAGE or 6
+    local itemsPerPage = self.ITEMS_PER_PAGE or 12
     local totalPages = math.max(1, math.ceil(totalItems / itemsPerPage))
 
     if not self.CurrentListPage or self.CurrentListPage < 1 then
