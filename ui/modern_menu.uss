@@ -548,6 +548,7 @@
     padding-bottom: 4px;
     margin-right: 6px;
     font-size: 11px;
+    font-weight: bold;
     border-radius: 4px;
 }
 
