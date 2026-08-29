@@ -429,14 +429,14 @@ function ModernMenu:RefreshLineupsList()
         end
     end
 
-    for i = #self.LineupRowPool, #lineups + 1, -1 do
+    for i = #lineups + 1, #self.LineupRowPool do
         local poolItem = self.LineupRowPool[i]
         if poolItem and poolItem.row then
-            if poolItem.row.RemoveFromHierarchy then poolItem.row:RemoveFromHierarchy() end
-            if poolItem.row.Delete then poolItem.row:Delete()
-            elseif UI and UI.Delete then UI:Delete(poolItem.row) end
+            poolItem.row.visible = false
+            if poolItem.row.style and DisplayStyle then
+                poolItem.row.style.display = DisplayStyle.None
+            end
         end
-        self.LineupRowPool[i] = nil
     end
 end
 

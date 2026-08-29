@@ -491,35 +491,31 @@ function HUD:Render(activeLineup, isAligning, agent)
         end
     end
 
-    for i = #self.OverlayPool, visibleOverlayCount + 1, -1 do
+    for i = visibleOverlayCount + 1, #self.OverlayPool do
         local overlay = self.OverlayPool[i]
-        if overlay then
-            if overlay.SetVisible then overlay:SetVisible(false) end
-            if WorldVisuals and WorldVisuals.RemoveObject then
-                WorldVisuals:RemoveObject(overlay)
-            end
+        if overlay and overlay.SetVisible then
+            overlay:SetVisible(false)
         end
-        self.OverlayPool[i] = nil
     end
 
-    for i = #self.TagPool, visibleTagCount + 1, -1 do
+    for i = visibleTagCount + 1, #self.TagPool do
         local tag = self.TagPool[i]
         if tag and tag.container then
-            if tag.container.RemoveFromHierarchy then tag.container:RemoveFromHierarchy() end
-            if tag.container.Delete then tag.container:Delete()
-            elseif UI and UI.Delete then UI:Delete(tag.container) end
+            tag.container.visible = false
+            if tag.container.style and DisplayStyle then
+                tag.container.style.display = DisplayStyle.None
+            end
         end
-        self.TagPool[i] = nil
     end
 
-    for i = #self.AimMarkerPool, visibleMarkerCount + 1, -1 do
+    for i = visibleMarkerCount + 1, #self.AimMarkerPool do
         local marker = self.AimMarkerPool[i]
         if marker and marker.dot then
-            if marker.dot.RemoveFromHierarchy then marker.dot:RemoveFromHierarchy() end
-            if marker.dot.Delete then marker.dot:Delete()
-            elseif UI and UI.Delete then UI:Delete(marker.dot) end
+            marker.dot.visible = false
+            if marker.dot.style and DisplayStyle then
+                marker.dot.style.display = DisplayStyle.None
+            end
         end
-        self.AimMarkerPool[i] = nil
     end
 end
 
