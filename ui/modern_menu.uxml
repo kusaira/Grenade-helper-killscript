@@ -29,7 +29,7 @@
                     <ui:VisualElement name="pageM2Lineups" class="aio2-page">
                         
                         <!-- SEARCH BAR AND CATEGORY FILTERS BAR -->
-                        <ui:VisualElement class="cmd-filter-bar" style="flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <ui:VisualElement class="cmd-filter-bar" style="flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-top: 4px; padding-bottom: 4px;">
                             <!-- SEARCH FIELD -->
                             <ui:VisualElement style="flex-direction: row; align-items: center; flex-grow: 1; margin-right: 12px;">
                                 <ui:Label text="SEARCH:" class="cmd-lineup-title" style="margin-right: 6px; font-size: 11px; color: #00E5FF;" />
