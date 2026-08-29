@@ -502,6 +502,15 @@
 }
 
 .cmd-text-field {
+    background-color: transparent;
+    border-width: 0px;
+    margin: 0px;
+    padding: 0px;
+}
+
+.cmd-text-field > .unity-base-text-field__input,
+.cmd-text-field > .unity-text-field__input,
+.cmd-text-field TextInput {
     background-color: #090C14;
     border-width: 1px;
     border-color: #00E5FF;
@@ -511,8 +520,14 @@
     padding-right: 10px;
     padding-top: 4px;
     padding-bottom: 4px;
-    height: 28px;
+    height: 26px;
     border-radius: 6px;
+}
+
+.cmd-text-field:focus > .unity-base-text-field__input,
+.cmd-text-field:focus > .unity-text-field__input {
+    border-color: #00FF9D;
+    background-color: #0C121E;
 }
 
 .cmd-preset-bar {
