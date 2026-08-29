@@ -513,7 +513,7 @@ function ModernMenu.Refresh()
 
     local lblDist = ModernMenu:Find("lblM2MaxDistance")
     if lblDist then
-        local currentDist = Config and Config.ActivationDistance or 2.5
+        local currentDist = Config and Config.ActivationDistance or 1.8
         lblDist.text = string.format("%.1f M", currentDist)
     end
 
@@ -1014,9 +1014,15 @@ function ModernMenu.Init()
         if trkDistance.SetCursor then trkDistance:SetCursor("hand") end
         if trkDistance.OnClick then
             trkDistance:OnClick(function()
-                local current = Config and Config.ActivationDistance or 2.5
-                local nextVal = current + 0.5
-                if nextVal > 5.0 then nextVal = 0.5 end
+                local current = Config and Config.ActivationDistance or 1.8
+                local nextVal = 1.8
+                if current < 0.9 then nextVal = 1.0
+                elseif current < 1.4 then nextVal = 1.5
+                elseif current < 1.7 then nextVal = 1.8
+                elseif current < 2.0 then nextVal = 2.2
+                elseif current < 2.5 then nextVal = 2.8
+                else nextVal = 0.5 end
+
                 if Config then Config.ActivationDistance = nextVal end
                 ModernMenu.Refresh()
             end)

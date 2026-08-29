@@ -418,7 +418,7 @@ function HUD:Render(activeLineup, isAligning, agent)
         end
     end
 
-    local matchRadius = (Config and Config.ActivationDistance) or 2.5
+    local matchRadius = (Config and Config.ActivationDistance) or 1.8
     local showSkyLabels = (Config and Config.ShowSkyTargetLabels ~= false)
 
     for _, lineup in ipairs(lineups) do
