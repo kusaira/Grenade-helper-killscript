@@ -92,7 +92,7 @@ function GrenadeHelper:DeleteActiveLineupAction()
     if not agent then return end
 
     local activeMap = LineupService:GetCurrentMapName()
-    local maxDist   = Config and Config.ActivationDistance or 1.8
+    local maxDist   = Config and Config.ActivationDistance or 2.5
     local lineup    = LineupService:FindActiveLineup(agent, maxDist, activeMap)
     if lineup then
         if lineup.id then
@@ -114,7 +114,7 @@ function GrenadeHelper:RenameActiveLineupAction()
     if not agent then return end
 
     local activeMap = LineupService:GetCurrentMapName()
-    local maxDist   = Config and Config.ActivationDistance or 1.8
+    local maxDist   = Config and Config.ActivationDistance or 2.5
     local lineup    = LineupService:FindActiveLineup(agent, maxDist, activeMap)
     if lineup then
         if ModernMenu and ModernMenu.OpenRenameModalForLineup then
@@ -162,7 +162,7 @@ function GrenadeHelper:OnFrame()
         return
     end
 
-    local maxDist = Config and Config.ActivationDistance or 1.8
+    local maxDist = Config and Config.ActivationDistance or 2.5
     local nearestLineup = LineupService:FindActiveLineup(agent, maxDist)
 
     local isAltPressed = false

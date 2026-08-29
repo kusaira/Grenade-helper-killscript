@@ -256,8 +256,8 @@ function HUD:Render(activeLineup, isAligning, agent)
     local currentKey, isThrowable = LineupService:GetCurrentGrenadeKey(agent)
     local r, g, b = self:ParseRGB(Config and Config.MarkerColor or "#00FF9D")
 
-    local fadeStartDist = 18.0
-    local fadeFullDist  = 4.0
+    local fadeStartDist = (Config and Config.MarkerRenderDistance) or 8.0
+    local fadeFullDist  = 3.0
 
     local isAlwaysShowEnabled = (Storage and Storage.ShowAllLineupsWithoutGrenade == true) or (Config and Config.ShowAllLineupsWithoutGrenade == true)
     local isAltHeld = false

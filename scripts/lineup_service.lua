@@ -442,7 +442,7 @@ function LineupService:FindActiveLineup(agent, maxDistance, mapName)
     local closestLineup = nil
     local bestScore     = 999999.0
     local minDistance   = 999999.0
-    local maxDistLimit  = maxDistance or (Config and Config.ActivationDistance) or 1.8
+    local maxDistLimit  = maxDistance or (Config and Config.ActivationDistance) or 2.5
 
     for _, lineup in ipairs(mapLineups) do
         local hasActions = (lineup.actionsData and lineup.actionsData ~= "") or (lineup.actions ~= nil)
@@ -616,7 +616,7 @@ function LineupService:LockActiveLineup(agent, mapName)
     local currentPitch = (lookRot and lookRot.x) or 0
     local currentYaw   = (lookRot and lookRot.y) or 0
 
-    local activationRadius = (Config and Config.ActivationDistance) or 1.8
+    local activationRadius = (Config and Config.ActivationDistance) or 2.5
     local searchRadius = activationRadius
 
     local currentKey, isThrowable = self:GetCurrentGrenadeKey(agent)
