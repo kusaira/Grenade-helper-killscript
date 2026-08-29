@@ -51,7 +51,7 @@
                         </ui:ScrollView>
 
                         <!-- PAGINATION CONTROLS FOOTER -->
-                        <ui:VisualElement name="veM2PaginationBar" style="flex-direction: row; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 6px; border-top-width: 1px; border-top-color: rgba(0, 229, 255, 0.15);">
+                        <ui:VisualElement name="veM2PaginationBar" style="flex-direction: row; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; padding-bottom: 8px; margin-bottom: 4px; border-top-width: 1px; border-top-color: rgba(0, 229, 255, 0.15);">
                             <ui:Label name="lblM2CurrentMapCaption" text="INDEX OF SAVED GRENADE TARGETS" class="cmd-lineup-detail" style="color: #7E8E9F; font-size: 11px;" />
                             <ui:VisualElement style="flex-direction: row; align-items: center;">
                                 <ui:Button name="btnM2PrevPage" text="&lt;&lt; PREV" class="cmd-page-btn" style="margin-right: 8px;" />

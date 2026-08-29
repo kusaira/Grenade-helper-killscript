@@ -573,11 +573,13 @@
     font-weight: bold;
     padding-left: 14px;
     padding-right: 14px;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
     min-width: 78px;
-    height: 29px;
-    border-radius: 6px;
+    height: 26px;
+    border-radius: 5px;
     -unity-text-align: middle-center;
 }
 
