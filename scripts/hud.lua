@@ -53,8 +53,16 @@ end
 
 function HUD:FindChild(parent, name)
     if not parent then return nil end
+    if not self.ElementCache then self.ElementCache = {} end
+    local cached = self.ElementCache[name]
+    if cached then return cached end
+
     if parent.GetChild then
-        return parent:GetChild(name)
+        local child = parent:GetChild(name)
+        if child then
+            self.ElementCache[name] = child
+        end
+        return child
     end
     return nil
 end

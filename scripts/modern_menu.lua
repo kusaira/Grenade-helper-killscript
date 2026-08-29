@@ -33,7 +33,15 @@ local ModernMenu = {
 
 function ModernMenu:Find(name)
     if not self.Root then return nil end
-    return self.Root:GetChild(name)
+    if not self.ElementCache then self.ElementCache = {} end
+    local cached = self.ElementCache[name]
+    if cached then return cached end
+
+    local child = self.Root:GetChild(name)
+    if child then
+        self.ElementCache[name] = child
+    end
+    return child
 end
 
 function ModernMenu:GetWindowScale()
@@ -800,6 +808,7 @@ function ModernMenu.Init()
     if not ModernMenu.Root then
         return false
     end
+    ModernMenu.ElementCache = {}
 
     if ModernMenu.LineupRowPool then
         for _, poolItem in ipairs(ModernMenu.LineupRowPool) do
