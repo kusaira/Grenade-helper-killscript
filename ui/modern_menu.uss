@@ -565,17 +565,20 @@
 }
 
 .cmd-page-btn {
-    background-color: rgba(0, 229, 255, 0.12);
+    background-color: rgba(0, 229, 255, 0.14);
     border-width: 1px;
     border-color: #00E5FF;
     color: #00E5FF;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: bold;
-    padding-left: 14px;
-    padding-right: 14px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    border-radius: 5px;
+    padding-left: 22px;
+    padding-right: 22px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    min-width: 105px;
+    height: 32px;
+    border-radius: 6px;
+    -unity-text-align: middle-center;
 }
 
 .cmd-page-btn:hover {
