@@ -13,8 +13,8 @@
 
 .aio2-panel {
     position: absolute;
-    width: 920px;
-    height: 540px;
+    width: 980px;
+    height: 720px;
     background-color: #0B0E17;
     border-width: 1px;
     border-color: rgba(0, 229, 255, 0.4);
@@ -506,10 +506,13 @@
     border-width: 1px;
     border-color: #00E5FF;
     color: #FFFFFF;
-    font-size: 13px;
-    padding: 8px;
+    font-size: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    height: 28px;
     border-radius: 6px;
-    margin-bottom: 12px;
 }
 
 .cmd-preset-bar {
@@ -541,6 +544,25 @@
     border-color: #00E5FF;
     color: #00E5FF;
     font-weight: bold;
+}
+
+.cmd-page-btn {
+    background-color: rgba(0, 229, 255, 0.12);
+    border-width: 1px;
+    border-color: #00E5FF;
+    color: #00E5FF;
+    font-size: 11px;
+    font-weight: bold;
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-radius: 5px;
+}
+
+.cmd-page-btn:hover {
+    background-color: #00E5FF;
+    color: #0B0E17;
 }
 
 .cmd-modal-actions {

@@ -8,9 +8,9 @@ local JsonUtility   = require("json_utility")
 local ActionCodec   = require("action_codec")
 
 local ModernMenu = {
-    PANEL_WIDTH  = 920,
-    PANEL_HEIGHT = 540,
-    ITEMS_PER_PAGE = 12,
+    PANEL_WIDTH  = 980,
+    PANEL_HEIGHT = 720,
+    ITEMS_PER_PAGE = 8,
     CurrentListPage = 1,
     Root = nil,
     Panel = nil,
@@ -253,7 +253,7 @@ function ModernMenu:RefreshLineupsList()
     end
 
     local totalItems = #lineups
-    local itemsPerPage = self.ITEMS_PER_PAGE or 12
+    local itemsPerPage = self.ITEMS_PER_PAGE or 8
     local totalPages = math.max(1, math.ceil(totalItems / itemsPerPage))
 
     if not self.CurrentListPage or self.CurrentListPage < 1 then

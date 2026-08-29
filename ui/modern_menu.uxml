@@ -38,7 +38,7 @@
                             <!-- SEARCH FIELD -->
                             <ui:VisualElement style="flex-direction: row; align-items: center; flex-grow: 1; margin-right: 12px;">
                                 <ui:Label text="SEARCH:" class="cmd-lineup-title" style="margin-right: 6px; font-size: 11px; color: #00E5FF;" />
-                                <ui:TextField name="txtM2SearchInput" class="cmd-text-field" style="margin-bottom: 0px; flex-grow: 1; font-size: 11px; padding: 4px;" />
+                                <ui:TextField name="txtM2SearchInput" class="cmd-text-field" style="flex-grow: 1;" />
                             </ui:VisualElement>
 
                             <!-- TYPE FILTER CHIPS -->
@@ -56,12 +56,12 @@
                         </ui:ScrollView>
 
                         <!-- PAGINATION CONTROLS FOOTER -->
-                        <ui:VisualElement name="veM2PaginationBar" style="flex-direction: row; align-items: center; justify-content: space-between; margin-top: 8px; padding-left: 4px; padding-right: 4px;">
-                            <ui:Label name="lblM2CurrentMapCaption" text="INDEX OF SAVED GRENADE TARGETS" class="cmd-lineup-detail" style="color: #7E8E9F; font-size: 10px;" />
+                        <ui:VisualElement name="veM2PaginationBar" style="flex-direction: row; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 6px; border-top-width: 1px; border-top-color: rgba(0, 229, 255, 0.15);">
+                            <ui:Label name="lblM2CurrentMapCaption" text="INDEX OF SAVED GRENADE TARGETS" class="cmd-lineup-detail" style="color: #7E8E9F; font-size: 11px;" />
                             <ui:VisualElement style="flex-direction: row; align-items: center;">
-                                <ui:Button name="btnM2PrevPage" text="&lt;&lt; PREV" class="cmd-preset-btn" style="padding-left: 8px; padding-right: 8px;" />
-                                <ui:Label name="lblM2PageIndicator" text="PAGE 1 / 1" class="cmd-lineup-title" style="font-size: 11px; color: #00E5FF; margin-left: 6px; margin-right: 6px;" />
-                                <ui:Button name="btnM2NextPage" text="NEXT &gt;&gt;" class="cmd-preset-btn" style="padding-left: 8px; padding-right: 8px;" />
+                                <ui:Button name="btnM2PrevPage" text="&lt;&lt; PREV" class="cmd-page-btn" style="margin-right: 8px;" />
+                                <ui:Label name="lblM2PageIndicator" text="PAGE 1 / 1" class="cmd-lineup-title" style="font-size: 12px; color: #00E5FF; margin-left: 8px; margin-right: 16px;" />
+                                <ui:Button name="btnM2NextPage" text="NEXT &gt;&gt;" class="cmd-page-btn" />
                             </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
