@@ -10,11 +10,11 @@
                     <ui:Label text="GRENADE HELPER PRO // v2.0" class="aio2-top-pill-text" />
                 </ui:VisualElement>
                 <ui:VisualElement name="veM2DragHandle" class="aio2-topbar-spacer" />
-                <ui:VisualElement style="flex-direction: row; align-items: center; margin-right: 10px;">
-                    <ui:Label text="CONFIG:" style="color: #00E5FF; font-size: 11px; font-weight: bold; margin-right: 8px;" />
-                    <ui:Button name="btnM2ExportJson" text="EXPORT" class="aio2-reset" style="margin-right: 6px; padding-left: 10px; padding-right: 10px;" />
-                    <ui:Button name="btnM2ImportJson" text="OVERWRITE" class="aio2-reset" style="margin-right: 6px; padding-left: 10px; padding-right: 10px;" />
-                    <ui:Button name="btnM2AddJson" text="APPEND" class="aio2-reset" style="margin-right: 6px; padding-left: 10px; padding-right: 10px;" />
+                <ui:VisualElement class="aio2-config-group">
+                    <ui:Label text="CONFIG:" class="aio2-config-label" />
+                    <ui:Button name="btnM2ExportJson" text="EXPORT" class="aio2-reset aio2-config-btn" />
+                    <ui:Button name="btnM2ImportJson" text="OVERWRITE" class="aio2-reset aio2-config-btn" />
+                    <ui:Button name="btnM2AddJson" text="APPEND" class="aio2-reset aio2-config-btn" />
                 </ui:VisualElement>
                 <ui:Button name="btnM2Close" text="X" class="aio2-close" />
             </ui:VisualElement>
@@ -22,22 +22,21 @@
             <!-- MAIN BODY -->
             <ui:VisualElement class="aio2-main">
 
-
                 <ui:VisualElement class="aio2-content">
                     
                     <!-- LINEUPS DIRECTORY -->
                     <ui:VisualElement name="pageM2Lineups" class="aio2-page">
                         
                         <!-- SEARCH BAR AND CATEGORY FILTERS BAR -->
-                        <ui:VisualElement class="cmd-filter-bar" style="flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-top: 4px; padding-bottom: 4px;">
+                        <ui:VisualElement class="cmd-filter-bar">
                             <!-- SEARCH FIELD -->
-                            <ui:VisualElement style="flex-direction: row; align-items: center; flex-grow: 1; margin-right: 12px;">
-                                <ui:Label text="SEARCH:" class="cmd-lineup-title" style="margin-right: 6px; font-size: 11px; color: #00E5FF;" />
-                                <ui:TextField name="txtM2SearchInput" class="cmd-text-field" style="flex-grow: 1;" />
+                            <ui:VisualElement class="cmd-search-box">
+                                <ui:Label text="SEARCH:" class="cmd-search-label" />
+                                <ui:TextField name="txtM2SearchInput" class="cmd-text-field" />
                             </ui:VisualElement>
 
                             <!-- TYPE FILTER CHIPS -->
-                            <ui:VisualElement style="flex-direction: row; align-items: center;">
+                            <ui:VisualElement class="cmd-filter-chips">
                                 <ui:Button name="btnM2FilterAll" text="ALL" class="cmd-preset-btn" />
                                 <ui:Button name="btnM2FilterSonar" text="SONAR" class="cmd-preset-btn" />
                                 <ui:Button name="btnM2FilterEmp" text="EMP" class="cmd-preset-btn" />
@@ -47,15 +46,15 @@
                         </ui:VisualElement>
 
                         <ui:ScrollView name="veM2LineupList" class="aio2-card cmd-scrollview" mode="Vertical">
-                            <ui:Label name="lblM2EmptyLineups" text="No saved target spots matching search filter." class="aio2-row-label" style="color: #7E8E9F; margin: 20px; text-align: center;" />
+                            <ui:Label name="lblM2EmptyLineups" text="No saved target spots matching search filter." class="aio2-row-label cmd-empty-label" />
                         </ui:ScrollView>
 
                         <!-- PAGINATION CONTROLS FOOTER -->
-                        <ui:VisualElement name="veM2PaginationBar" style="flex-direction: row; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; padding-bottom: 8px; margin-bottom: 4px; border-top-width: 1px; border-top-color: rgba(0, 229, 255, 0.15);">
-                            <ui:Label name="lblM2CurrentMapCaption" text="INDEX OF SAVED GRENADE TARGETS" class="cmd-lineup-detail" style="color: #7E8E9F; font-size: 11px;" />
-                            <ui:VisualElement style="flex-direction: row; align-items: center;">
-                                <ui:Button name="btnM2PrevPage" text="&lt;&lt; PREV" class="cmd-page-btn" style="margin-right: 8px;" />
-                                <ui:Label name="lblM2PageIndicator" text="PAGE 1 / 1" class="cmd-lineup-title" style="font-size: 12px; color: #00E5FF; margin-left: 8px; margin-right: 16px;" />
+                        <ui:VisualElement name="veM2PaginationBar" class="cmd-pagination-bar">
+                            <ui:Label name="lblM2CurrentMapCaption" text="INDEX OF SAVED GRENADE TARGETS" class="cmd-lineup-detail cmd-caption-text" />
+                            <ui:VisualElement class="cmd-pagination-controls">
+                                <ui:Button name="btnM2PrevPage" text="&lt;&lt; PREV" class="cmd-page-btn cmd-page-btn-prev" />
+                                <ui:Label name="lblM2PageIndicator" text="PAGE 1 / 1" class="cmd-page-indicator" />
                                 <ui:Button name="btnM2NextPage" text="NEXT &gt;&gt;" class="cmd-page-btn" />
                             </ui:VisualElement>
                         </ui:VisualElement>
@@ -66,10 +65,10 @@
             </ui:VisualElement>
 
             <!-- RENAME DIALOG MODAL -->
-            <ui:VisualElement name="veM2RenameModal" class="cmd-modal-container" style="display: none;">
+            <ui:VisualElement name="veM2RenameModal" class="cmd-modal-container">
                 <ui:VisualElement class="cmd-modal-box">
                     <ui:Label text="RENAME LINEUP TARGET" class="cmd-modal-title" />
-                    <ui:Label text="Enter new custom callout name for this lineup spot:" class="cmd-lineup-detail" style="margin-bottom: 10px;" />
+                    <ui:Label text="Enter new custom callout name for this lineup spot:" class="cmd-modal-subtext" />
                     <ui:TextField name="txtM2RenameInput" class="cmd-text-field" />
                     
                     <!-- PRESET QUICK BUTTONS -->
@@ -83,7 +82,7 @@
 
                     <ui:VisualElement class="cmd-modal-actions">
                         <ui:Button name="btnM2RenameSave" text="CONFIRM" class="aio2-reset" />
-                        <ui:Button name="btnM2RenameCancel" text="CANCEL" class="aio2-close" style="width: auto; padding-left: 14px; padding-right: 14px;" />
+                        <ui:Button name="btnM2RenameCancel" text="CANCEL" class="aio2-close cmd-cancel-btn" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>

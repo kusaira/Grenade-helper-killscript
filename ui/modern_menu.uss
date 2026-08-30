@@ -506,6 +506,7 @@
     border-width: 0px;
     margin: 0px;
     padding: 2px 0px;
+    flex-grow: 1;
 }
 
 .cmd-text-field > .unity-base-text-field__input,
@@ -591,4 +592,107 @@
 .cmd-modal-actions {
     flex-direction: row;
     justify-content: flex-end;
+}
+
+/* CONFIG TOPBAR CONTROLS */
+.aio2-config-group {
+    flex-direction: row;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.aio2-config-label {
+    color: #00E5FF;
+    font-size: 11px;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.aio2-config-btn {
+    margin-right: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/* SEARCH AND FILTER BAR */
+.cmd-filter-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.cmd-search-box {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    margin-right: 12px;
+}
+
+.cmd-search-label {
+    margin-right: 6px;
+    font-size: 11px;
+    color: #00E5FF;
+    font-weight: bold;
+}
+
+.cmd-filter-chips {
+    flex-direction: row;
+    align-items: center;
+}
+
+.cmd-empty-label {
+    color: #7E8E9F;
+    margin: 20px;
+    -unity-text-align: middle-center;
+}
+
+/* FOOTER PAGINATION BAR */
+.cmd-pagination-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 6px;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-top-width: 1px;
+    border-top-color: rgba(0, 229, 255, 0.15);
+}
+
+.cmd-caption-text {
+    color: #7E8E9F;
+    font-size: 11px;
+}
+
+.cmd-pagination-controls {
+    flex-direction: row;
+    align-items: center;
+}
+
+.cmd-page-btn-prev {
+    margin-right: 8px;
+}
+
+.cmd-page-indicator {
+    font-size: 12px;
+    color: #00E5FF;
+    font-weight: bold;
+    margin-left: 8px;
+    margin-right: 16px;
+}
+
+/* RENAME MODAL DIALOG EXTENSIONS */
+.cmd-modal-subtext {
+    color: #7E8E9F;
+    font-size: 11px;
+    margin-bottom: 10px;
+}
+
+.cmd-cancel-btn {
+    width: auto;
+    padding-left: 14px;
+    padding-right: 14px;
 }
