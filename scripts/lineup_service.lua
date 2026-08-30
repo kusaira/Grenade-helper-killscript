@@ -420,6 +420,50 @@ function LineupService:HasGrenadeInInventory(agent, grenadeType)
     return self:MatchesGrenadeKey(currentKey, isThrowable, grenadeType)
 end
 
+function LineupService:ComputeAimPoint(standPos, pitch, yaw, distance)
+    local distVal  = distance or 5.0
+    local yawRad   = math.rad(yaw or 0)
+    local pitchRad = math.rad(pitch or 0)
+    local cosPitch = math.cos(pitchRad)
+    local forwardX = math.sin(yawRad) * cosPitch
+    local forwardY = -math.sin(pitchRad)
+    local forwardZ = math.cos(yawRad) * cosPitch
+
+    local sx = standPos and standPos.x or 0
+    local sy = standPos and standPos.y or 0
+    local sz = standPos and standPos.z or 0
+
+    return MathUtils:CreateVector3(
+        sx + forwardX * distVal,
+        sy + 1.6 + forwardY * distVal,
+        sz + forwardZ * distVal
+    )
+end
+
+function LineupService:GetCursorTargetScore(agent, lineup, currentPos, currentPitch, currentYaw)
+    if not lineup or not lineup.standPosition then return 999999.0 end
+
+    local dist = MathUtils:CalculateDistance(currentPos, lineup.standPosition)
+
+    local camera = Cameras and Cameras.Main
+    if camera and camera.WorldToViewportPoint then
+        local aimPoint = self:ComputeAimPoint(lineup.standPosition, lineup.pitch or 0, lineup.yaw or 0, 5.0)
+        local viewport = camera:WorldToViewportPoint(aimPoint)
+
+        if viewport and viewport.z and viewport.z > 0 then
+            local dx = (viewport.x or 0.5) - 0.5
+            local dy = (viewport.y or 0.5) - 0.5
+            local screenDist = math.sqrt(dx * dx + dy * dy)
+            return (screenDist * 1000.0) + (dist * 0.01)
+        end
+    end
+
+    local yawDiff   = MathUtils:AngleDiffDegrees(currentYaw, lineup.yaw or 0)
+    local pitchDiff = math.abs(currentPitch - (lineup.pitch or 0))
+    local angleDiff = math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff)
+    return (angleDiff * 100.0) + (dist * 0.01)
+end
+
 function LineupService:FindActiveLineup(agent, maxDistance, mapName)
     if not agent or not agent.Movement or not agent.Movement.Position then return nil, 999999.0, true end
 
@@ -449,11 +493,7 @@ function LineupService:FindActiveLineup(agent, maxDistance, mapName)
         if hasActions and self:MatchesGrenadeKey(currentKey, isThrowable, lineup.grenadeType) then
             local dist = MathUtils:CalculateDistance(currentPos, lineup.standPosition)
             if dist <= maxDistLimit then
-                local yawDiff   = MathUtils:AngleDiffDegrees(currentYaw, lineup.yaw or 0)
-                local pitchDiff = math.abs(currentPitch - (lineup.pitch or 0))
-                local angleDiff = math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff)
-
-                local score = angleDiff + (dist * 3.0)
+                local score = self:GetCursorTargetScore(agent, lineup, currentPos, currentPitch, currentYaw)
 
                 if score < bestScore then
                     bestScore     = score
@@ -627,16 +667,10 @@ function LineupService:LockActiveLineup(agent, mapName)
         if hasActions and self:MatchesGrenadeKey(currentKey, isThrowable, candidate.grenadeType) then
             local dist = MathUtils:CalculateDistance(currentPos, candidate.standPosition)
             if dist <= searchRadius then
-                local yawDiff   = MathUtils:AngleDiffDegrees(currentYaw, candidate.yaw or 0)
-                local pitchDiff = math.abs(currentPitch - (candidate.pitch or 0))
-                local angleDiff = math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff)
-
-                if angleDiff <= 75 then
-                    local score = angleDiff + (dist * 3.0)
-                    if not bestScore or score < bestScore then
-                        bestScore = score
-                        best = candidate
-                    end
+                local score = self:GetCursorTargetScore(agent, candidate, currentPos, currentPitch, currentYaw)
+                if not bestScore or score < bestScore then
+                    bestScore = score
+                    best = candidate
                 end
             end
         end
