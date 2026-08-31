@@ -645,6 +645,7 @@ function LineupService:LockActiveLineup(agent, mapName)
     ps.LockTick             = (Time and Time.Tick) or 0
     ps.StableTicks          = 0
     ps.PostAlignSettleTicks = 0
+    ps.LoggedDebug          = false
 
     if not agent or not agent.Movement or not agent.Movement.Position then return nil end
 
@@ -709,6 +710,54 @@ function LineupService:ResolveStateAtTick(track, elapsed)
     return cur
 end
 
+function LineupService:LogAlignmentDebugReport(agent, lineup, preRollTicks)
+    if not lineup or self.PlaybackState.LoggedDebug then return end
+    self.PlaybackState.LoggedDebug = true
+
+    local currentPos = agent and agent.Movement and agent.Movement.Position
+    local targetPos  = lineup.standPosition
+    local lookRot    = AgentInput and AgentInput.GetLookRotation and AgentInput:GetLookRotation()
+
+    local dx, dy, dz = 0, 0, 0
+    local dist2D_cm, dist3D_cm = 0, 0
+    if currentPos and targetPos then
+        dx = (currentPos.x or 0) - (targetPos.x or 0)
+        dy = (currentPos.y or 0) - (targetPos.y or 0)
+        dz = (currentPos.z or 0) - (targetPos.z or 0)
+        local dist2D_m = math.sqrt(dx * dx + dz * dz)
+        local dist3D_m = math.sqrt(dx * dx + dy * dy + dz * dz)
+        dist2D_cm = dist2D_m * 100.0
+        dist3D_cm = dist3D_m * 100.0
+    end
+
+    local pitchDev, yawDev, totalAngleDev = 0, 0, 0
+    if lookRot then
+        local curPitch = lookRot.x or 0
+        local curYaw   = lookRot.y or 0
+        pitchDev = curPitch - (lineup.pitch or 0)
+        yawDev   = MathUtils:AngleDiffDegrees(curYaw, lineup.yaw or 0)
+        totalAngleDev = math.sqrt(pitchDev * pitchDev + yawDev * yawDev)
+    end
+
+    local ticks = preRollTicks or 0
+    local approxMs = ticks * 16.67
+
+    local desc = tostring(lineup.description or "Lineup")
+    local gtype = tostring(lineup.grenadeType or "Grenade")
+
+    print("[GrenadeHelper] ================= ALIGNMENT DEBUG REPORT =================")
+    print(string.format("[GrenadeHelper] Lineup: \"%s\" [%s]", desc, gtype))
+    print(string.format("[GrenadeHelper] Pos Dev : X=%.3fm, Y=%.3fm, Z=%.3fm | 2D Dev: %.2f cm | 3D Dev: %.2f cm", dx, dy, dz, dist2D_cm, dist3D_cm))
+    print(string.format("[GrenadeHelper] Aim Dev : Pitch=%.3f deg, Yaw=%.3f deg | Total Dev: %.3f deg", pitchDev, yawDev, totalAngleDev))
+    print(string.format("[GrenadeHelper] Speed   : %d ticks (~%.1f ms)", ticks, approxMs))
+    print("[GrenadeHelper] ==========================================================")
+
+    if NotificationController and NotificationController.ShowHint then
+        local summaryHint = string.format("DEV: %.2fcm | AIM: %.3f deg | %dticks (%.0fms)", dist2D_cm, totalAngleDev, ticks, approxMs)
+        NotificationController:ShowHint(summaryHint, 3.0)
+    end
+end
+
 function LineupService:StopAlignment()
     self:StopPositionAlign()
 
@@ -725,6 +774,13 @@ function LineupService:StopAlignment()
     end
 
     local ps = self.PlaybackState
+    if ps.Lineup and not ps.LoggedDebug then
+        local agent = (Agents and Agents.GetLocalOrSpectatedAgent and Agents:GetLocalOrSpectatedAgent())
+            or (Agents and Agents.GetLocalAgent and Agents:GetLocalAgent())
+        local ticks = ps.LockTick and (((Time and Time.Tick) or 0) - ps.LockTick) or 0
+        self:LogAlignmentDebugReport(agent, ps.Lineup, ticks)
+    end
+
     ps.Lineup               = nil
     ps.PreRollDone          = false
     ps.StartTick            = nil
@@ -732,6 +788,7 @@ function LineupService:StopAlignment()
     ps.StableTicks          = 0
     ps.PostAlignSettleTicks = 0
     ps.NextEventIndex       = 1
+    ps.LoggedDebug          = false
     ps.Current              = { move = { x = 0, y = 0 }, look = { x = 0, y = 0 }, jump = false, crouch = false, fire = false, altFire = false }
 end
 
@@ -785,6 +842,7 @@ function LineupService:UpdatePlayback(agent)
                     move = { x = 0, y = 0 }, look = { x = lineup.pitch or 0, y = lineup.yaw or 0 },
                     jump = false, crouch = targetCrouch, fire = false, altFire = false,
                 }
+                self:LogAlignmentDebugReport(agent, lineup, preRollTicks)
             end
             return true
         end
