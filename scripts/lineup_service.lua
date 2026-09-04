@@ -858,7 +858,7 @@ function LineupService:UpdatePlayback(agent)
 
     if not ps.PreRollDone then
         local preRollTicks = ((Time and Time.Tick) or 0) - (ps.LockTick or 0)
-        local forced = preRollTicks > 120
+        local forced = preRollTicks > 25
 
         local targetCrouch = self:GetInitialLineupCrouch(lineup)
 
@@ -874,7 +874,7 @@ function LineupService:UpdatePlayback(agent)
 
             local requiredSettle = targetCrouch and 1 or self.SETTLE_DELAY_TICKS
 
-            if (ps.PostAlignSettleTicks >= requiredSettle and grenadeReady) or forced then
+            if (ps.PostAlignSettleTicks >= requiredSettle and (grenadeReady or isThrowable)) or forced then
                 ps.PreRollDone    = true
                 ps.StartTick      = (Time and Time.Tick) or 0
                 ps.NextEventIndex = 1
@@ -886,8 +886,6 @@ function LineupService:UpdatePlayback(agent)
             end
             return true
         end
-
-
 
         local currentPos = agent and agent.Movement and agent.Movement.Position
         local targetPos  = lineup and lineup.standPosition
@@ -911,7 +909,7 @@ function LineupService:UpdatePlayback(agent)
             reachedPos, reachedAim = true, true
         end
 
-        if reachedPos and reachedAim and (grenadeReady or forced) then
+        if reachedPos and reachedAim then
             ps.StableTicks = ps.StableTicks + 1
         else
             ps.StableTicks = 0
