@@ -6,7 +6,7 @@ local ActionCodec = require("action_codec")
 local MathUtils   = require("math_utils")
 
 local LineupService = {
-    PREROLL_MAX_SPEED = 0.10,
+    PREROLL_MAX_SPEED = 0.25,
     PREROLL_STABLE_TICKS_REQUIRED = 1,
     SETTLE_DELAY_TICKS = 2,
     ActionsDecodeCache = {},
@@ -554,13 +554,13 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
     local speed = math.sqrt(velX * velX + velZ * velZ)
 
-    -- Ultra-minimal position threshold: 1.0 mm accuracy with low speed, or 0.5 mm absolute
-    if (distance <= 0.0010 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.0005 then
+    -- Precision target threshold: 1.5 cm (0.015 m) with low speed (<= 0.25 m/s), or 8 mm (0.008 m) absolute
+    if (distance <= 0.015 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.008 then
         self:StopPositionAlign()
         return true
     end
 
-    -- Predictive kinematic check (16.67 ms lookahead)
+    -- Predictive next-tick position check (16.67 ms lookahead)
     local dt = 0.01667
     local nextX = currentPos.x + velX * dt
     local nextZ = currentPos.z + velZ * dt
@@ -568,46 +568,32 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local nextDz = targetPos.z - nextZ
     local nextDistance = math.sqrt(nextDx * nextDx + nextDz * nextDz)
 
-    -- Active counter-strafing brake if next tick overshoots target or within 1.2 cm at speed
-    local willOvershoot = (nextDistance > distance) and (distance <= 0.04)
-    if (distance <= 0.012 or willOvershoot) and speed > self.PREROLL_MAX_SPEED then
+    -- Active counter-strafing brake ONLY if moving fast (> 0.35 m/s) and overshooting target
+    local willOvershoot = (nextDistance > distance) and (distance <= 0.05)
+    if willOvershoot and speed > 0.35 then
         local brakeX = -(velX * rightX + velZ * rightZ) / math.max(speed, 0.01)
         local brakeY = -(velX * forwardX + velZ * forwardZ) / math.max(speed, 0.01)
         if AgentInput and AgentInput.SetMoveDirection then
-            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * 0.9, brakeY * 0.9))
+            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * 0.8, brakeY * 0.8))
         end
         return false
     end
 
-    -- Dynamic PD velocity control: calculate desired velocity vector towards target
-    local targetSpeed = math.min(distance * 15.0, 1.0)
-    local dirX = dx / distance
-    local dirZ = dz / distance
+    -- Smooth move direction toward target in local agent space
+    local worldMoveX = dx * rightX + dz * rightZ
+    local worldMoveY = dx * forwardX + dz * forwardZ
 
-    local desiredVelX = dirX * targetSpeed
-    local desiredVelZ = dirZ * targetSpeed
+    local unitX = worldMoveX / distance
+    local unitY = worldMoveY / distance
 
-    -- Transform error velocity vector (desiredVel - currentVel) into local agent space
-    local accelX = desiredVelX - velX * 0.5
-    local accelZ = desiredVelZ - velZ * 0.5
-
-    local worldMoveX = accelX * rightX + accelZ * rightZ
-    local worldMoveY = accelX * forwardX + accelZ * forwardZ
-
-    local mag = math.sqrt(worldMoveX * worldMoveX + worldMoveY * worldMoveY)
-    local moveX, moveY = 0, 0
-    if mag > 0.001 then
-        local scale = math.min(mag, 1.0)
-        -- Keep minimum move scale floor (0.35) for sub-centimeter movement to overcome static friction
-        if distance < 0.05 then
-            scale = math.max(scale, 0.35)
-        end
-        moveX = (worldMoveX / mag) * scale
-        moveY = (worldMoveY / mag) * scale
+    -- Scale speed smoothly with distance (full speed above 10cm, scaling down to 0.40 near target)
+    local scale = 1.0
+    if distance < 0.10 then
+        scale = math.max(distance / 0.10, 0.40)
     end
 
     if AgentInput and AgentInput.SetMoveDirection then
-        AgentInput:SetMoveDirection(MathUtils:CreateVector2(moveX, moveY))
+        AgentInput:SetMoveDirection(MathUtils:CreateVector2(unitX * scale, unitY * scale))
     end
     return false
 end
