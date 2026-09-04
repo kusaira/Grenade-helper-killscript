@@ -6,9 +6,9 @@ local ActionCodec = require("action_codec")
 local MathUtils   = require("math_utils")
 
 local LineupService = {
-    PREROLL_MAX_SPEED = 0.15,
-    PREROLL_STABLE_TICKS_REQUIRED = 2,
-    SETTLE_DELAY_TICKS = 12,
+    PREROLL_MAX_SPEED = 0.20,
+    PREROLL_STABLE_TICKS_REQUIRED = 1,
+    SETTLE_DELAY_TICKS = 2,
     ActionsDecodeCache = {},
     LineupsSummaryCache = {},
     LastEquipTryTime = 0,
@@ -554,13 +554,13 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
     local speed = math.sqrt(velX * velX + velZ * velZ)
 
-    -- Precision target threshold: 1 cm with low speed, or 5 mm absolute
-    if (distance <= 0.01 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.005 then
+    -- Precision target threshold: 8 mm sub-centimeter accuracy with low speed, or 4 mm absolute
+    if (distance <= 0.008 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.004 then
         self:StopPositionAlign()
         return true
     end
 
-    -- Predictive next-tick position check (16.67 ms lookahead)
+    -- Predictive kinematic check (16.67 ms lookahead)
     local dt = 0.01667
     local nextX = currentPos.x + velX * dt
     local nextZ = currentPos.z + velZ * dt
@@ -568,32 +568,46 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local nextDz = targetPos.z - nextZ
     local nextDistance = math.sqrt(nextDx * nextDx + nextDz * nextDz)
 
-    -- Active micro-braking if next tick will overshoot or distance is within 1.5 cm and moving fast
-    local willOvershoot = (nextDistance > distance) and (distance <= 0.05)
-    if (distance <= 0.015 or willOvershoot) and speed > self.PREROLL_MAX_SPEED then
+    -- Active counter-strafing brake if next tick overshoots target or within 1.2 cm at speed
+    local willOvershoot = (nextDistance > distance) and (distance <= 0.04)
+    if (distance <= 0.012 or willOvershoot) and speed > self.PREROLL_MAX_SPEED then
         local brakeX = -(velX * rightX + velZ * rightZ) / math.max(speed, 0.01)
         local brakeY = -(velX * forwardX + velZ * forwardZ) / math.max(speed, 0.01)
         if AgentInput and AgentInput.SetMoveDirection then
-            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * 0.8, brakeY * 0.8))
+            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * 0.9, brakeY * 0.9))
         end
         return false
     end
 
-    -- Transform world displacement (dx, dz) into local agent space
-    local worldMoveX = dx * rightX + dz * rightZ
-    local worldMoveY = dx * forwardX + dz * forwardZ
+    -- Dynamic PD velocity control: calculate desired velocity vector towards target
+    local targetSpeed = math.min(distance * 15.0, 1.0)
+    local dirX = dx / distance
+    local dirZ = dz / distance
 
-    local unitX = worldMoveX / distance
-    local unitY = worldMoveY / distance
+    local desiredVelX = dirX * targetSpeed
+    local desiredVelZ = dirZ * targetSpeed
 
-    -- Dynamic speed scaling: Full speed > 8 cm, smooth scaling down to 8cm with a 0.35 floor to prevent friction stall
-    local scale = 1.0
-    if distance < 0.08 then
-        scale = math.max(distance / 0.08, 0.35)
+    -- Transform error velocity vector (desiredVel - currentVel) into local agent space
+    local accelX = desiredVelX - velX * 0.5
+    local accelZ = desiredVelZ - velZ * 0.5
+
+    local worldMoveX = accelX * rightX + accelZ * rightZ
+    local worldMoveY = accelX * forwardX + accelZ * forwardZ
+
+    local mag = math.sqrt(worldMoveX * worldMoveX + worldMoveY * worldMoveY)
+    local moveX, moveY = 0, 0
+    if mag > 0.001 then
+        local scale = math.min(mag, 1.0)
+        -- Keep minimum move scale floor (0.35) for sub-centimeter movement to overcome static friction
+        if distance < 0.05 then
+            scale = math.max(scale, 0.35)
+        end
+        moveX = (worldMoveX / mag) * scale
+        moveY = (worldMoveY / mag) * scale
     end
 
     if AgentInput and AgentInput.SetMoveDirection then
-        AgentInput:SetMoveDirection(MathUtils:CreateVector2(unitX * scale, unitY * scale))
+        AgentInput:SetMoveDirection(MathUtils:CreateVector2(moveX, moveY))
     end
     return false
 end
@@ -710,6 +724,9 @@ function LineupService:LockActiveLineup(agent, mapName)
     end
 
     ps.Lineup = best
+    if best then
+        self:EquipGrenadeForLineup(agent, best)
+    end
     return best
 end
 
@@ -773,15 +790,18 @@ function LineupService:LogAlignmentDebugReport(agent, lineup, preRollTicks)
     local desc = tostring(lineup.description or "Lineup")
     local gtype = tostring(lineup.grenadeType or "Grenade")
 
+    local dist2D_mm = dist2D_cm * 10.0
+    local dist3D_mm = dist3D_cm * 10.0
+
     print("[GrenadeHelper] ================= ALIGNMENT DEBUG REPORT =================")
     print(string.format("[GrenadeHelper] Lineup: \"%s\" [%s]", desc, gtype))
-    print(string.format("[GrenadeHelper] Pos Dev : X=%.3fm, Y=%.3fm, Z=%.3fm | 2D Dev: %.2f cm | 3D Dev: %.2f cm", dx, dy, dz, dist2D_cm, dist3D_cm))
+    print(string.format("[GrenadeHelper] Pos Dev : X=%.4fm, Y=%.4fm, Z=%.4fm | 2D Dev: %.1f mm | 3D Dev: %.1f mm", dx, dy, dz, dist2D_mm, dist3D_mm))
     print(string.format("[GrenadeHelper] Aim Dev : Pitch=%.3f deg, Yaw=%.3f deg | Total Dev: %.3f deg", pitchDev, yawDev, totalAngleDev))
     print(string.format("[GrenadeHelper] Speed   : %d ticks (~%.1f ms)", ticks, approxMs))
     print("[GrenadeHelper] ==========================================================")
 
     if NotificationController and NotificationController.ShowHint then
-        local summaryHint = string.format("DEV: %.2fcm | AIM: %.3f deg | %dticks (%.0fms)", dist2D_cm, totalAngleDev, ticks, approxMs)
+        local summaryHint = string.format("DEV: %.1fmm | AIM: %.3f deg | %dticks (%.0fms)", dist2D_mm, totalAngleDev, ticks, approxMs)
         NotificationController:ShowHint(summaryHint, 3.0)
     end
 end
