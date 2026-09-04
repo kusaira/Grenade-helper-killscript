@@ -57,6 +57,17 @@ function LineupService:InvalidateCaches(mapName)
     if Storage then
         Storage.GrenadeHelperLineupsRevision =
             (tonumber(Storage.GrenadeHelperLineupsRevision) or 0) + 1
+        if ConfigManager and ConfigManager.Save then ConfigManager:Save() end
+    end
+end
+
+function LineupService:CommitLineupsForMap(mapName, lineups)
+    if not Storage then return end
+    local lineupsByMap = Storage.LineupsByMap or {}
+    lineupsByMap[mapName] = lineups
+    Storage.LineupsByMap = lineupsByMap
+    if ConfigManager and ConfigManager.Save then
+        ConfigManager:Save()
     end
 end
 
@@ -217,12 +228,7 @@ function LineupService:EnsureStorageStructure()
     end
 end
 
-function LineupService:CommitLineupsForMap(mapName, lineups)
-    if not Storage then return end
-    local lineupsByMap = Storage.LineupsByMap or {}
-    lineupsByMap[mapName] = lineups
-    Storage.LineupsByMap = lineupsByMap
-end
+
 
 function LineupService:GetAllLineups(mapName)
     local targetMap = mapName or self:GetCurrentMapName()
