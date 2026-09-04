@@ -519,7 +519,7 @@ function LineupService:FindActiveLineup(agent, maxDistance, mapName)
 end
 
 function LineupService:AlignAimToTarget(agent, lineup)
-    if not lineup then return true end
+    if not lineup then return end
 
     local pitchVal = lineup.pitch or 0
     local yawVal   = lineup.yaw   or 0
@@ -528,17 +528,6 @@ function LineupService:AlignAimToTarget(agent, lineup)
     if AgentInput and AgentInput.SetLookRotation then
         AgentInput:SetLookRotation(rotVec)
     end
-
-    local lookRot = AgentInput and AgentInput.GetLookRotation and AgentInput:GetLookRotation()
-    if lookRot then
-        local curPitch = lookRot.x or 0
-        local curYaw   = lookRot.y or 0
-        local pitchDiff = math.abs(curPitch - pitchVal)
-        local yawDiff   = MathUtils:AngleDiffDegrees(curYaw, yawVal)
-        local totalDev  = math.sqrt(pitchDiff * pitchDiff + yawDiff * yawDiff)
-        return totalDev <= 0.05
-    end
-    return true
 end
 
 function LineupService:AlignPositionToTarget(agent, lineup)
@@ -915,7 +904,8 @@ function LineupService:UpdatePlayback(agent)
         end
 
         local reachedPos = self:AlignPositionToTarget(agent, lineup)
-        local reachedAim = self:AlignAimToTarget(agent, lineup)
+        self:AlignAimToTarget(agent, lineup)
+        local reachedAim = true
 
         if forced then
             reachedPos, reachedAim = true, true
