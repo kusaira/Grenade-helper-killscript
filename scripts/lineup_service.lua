@@ -6,7 +6,7 @@ local ActionCodec = require("action_codec")
 local MathUtils   = require("math_utils")
 
 local LineupService = {
-    PREROLL_MAX_SPEED = 0.20,
+    PREROLL_MAX_SPEED = 0.10,
     PREROLL_STABLE_TICKS_REQUIRED = 1,
     SETTLE_DELAY_TICKS = 2,
     ActionsDecodeCache = {},
@@ -554,8 +554,8 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
     local speed = math.sqrt(velX * velX + velZ * velZ)
 
-    -- Precision target threshold: 8 mm sub-centimeter accuracy with low speed, or 4 mm absolute
-    if (distance <= 0.008 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.004 then
+    -- Ultra-minimal precision target threshold: 2 mm sub-millimeter accuracy with low speed, or 1 mm absolute
+    if (distance <= 0.002 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.001 then
         self:StopPositionAlign()
         return true
     end
@@ -920,7 +920,7 @@ function LineupService:UpdatePlayback(agent)
         if lookRot then
             local pitchDiff = math.abs((lookRot.x or 0) - (lineup.pitch or 0))
             local yawDiff = MathUtils:AngleDiffDegrees(lookRot.y or 0, lineup.yaw or 0)
-            reachedAim = pitchDiff <= 0.25 and yawDiff <= 0.25
+            reachedAim = pitchDiff <= 0.05 and yawDiff <= 0.05
         end
 
         if forced then
