@@ -554,8 +554,8 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
     local speed = math.sqrt(velX * velX + velZ * velZ)
 
-    -- Ultra-minimal precision target threshold: 2 mm sub-millimeter accuracy with low speed, or 1 mm absolute
-    if (distance <= 0.002 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.001 then
+    -- Ultra-minimal position threshold: 1.0 mm accuracy with low speed, or 0.5 mm absolute
+    if (distance <= 0.0010 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.0005 then
         self:StopPositionAlign()
         return true
     end
@@ -914,14 +914,7 @@ function LineupService:UpdatePlayback(agent)
 
         local reachedPos = self:AlignPositionToTarget(agent, lineup)
         self:AlignAimToTarget(agent, lineup)
-
         local reachedAim = true
-        local lookRot = AgentInput and AgentInput.GetLookRotation and AgentInput:GetLookRotation()
-        if lookRot then
-            local pitchDiff = math.abs((lookRot.x or 0) - (lineup.pitch or 0))
-            local yawDiff = MathUtils:AngleDiffDegrees(lookRot.y or 0, lineup.yaw or 0)
-            reachedAim = pitchDiff <= 0.05 and yawDiff <= 0.05
-        end
 
         if forced then
             reachedPos, reachedAim = true, true
