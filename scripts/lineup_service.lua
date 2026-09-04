@@ -16,6 +16,7 @@ local LineupService = {
     PlaybackState = {
         Lineup               = nil,
         PreRollDone          = false,
+        InitialStopDone      = false,
         StartTick            = nil,
         LockTick             = nil,
         StableTicks          = 0,
@@ -651,6 +652,7 @@ function LineupService:LockActiveLineup(agent, mapName)
     local ps = self.PlaybackState
     ps.Lineup               = nil
     ps.PreRollDone          = false
+    ps.InitialStopDone      = false
     ps.StartTick            = nil
     ps.NextEventIndex       = 1
     ps.LockTick             = (Time and Time.Tick) or 0
@@ -794,6 +796,7 @@ function LineupService:StopAlignment()
 
     ps.Lineup               = nil
     ps.PreRollDone          = false
+    ps.InitialStopDone      = false
     ps.StartTick            = nil
     ps.LockTick             = nil
     ps.StableTicks          = 0
@@ -856,6 +859,35 @@ function LineupService:UpdatePlayback(agent)
                 self:LogAlignmentDebugReport(agent, lineup, preRollTicks)
             end
             return true
+        end
+
+        -- PHASE 0: Initial Zero-Velocity Brake
+        -- Bring character to 0 speed before starting 1D movement towards standPosition
+        if not ps.InitialStopDone and not forced then
+            local vel = agent and agent.Movement and agent.Movement.Position and agent.Movement.Velocity
+            local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
+            local speed = math.sqrt(velX * velX + velZ * velZ)
+
+            if speed > 0.05 then
+                local lookRot = AgentInput and AgentInput.GetLookRotation and AgentInput:GetLookRotation()
+                local yawRad   = math.rad(lookRot and lookRot.y or 0)
+                local forwardX = math.sin(yawRad)
+                local forwardZ = math.cos(yawRad)
+                local rightX   = math.cos(yawRad)
+                local rightZ   = -math.sin(yawRad)
+
+                local brakeX = -(velX * rightX + velZ * rightZ) / math.max(speed, 0.01)
+                local brakeY = -(velX * forwardX + velZ * forwardZ) / math.max(speed, 0.01)
+
+                if AgentInput and AgentInput.SetMoveDirection then
+                    AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX, brakeY))
+                end
+                self:AlignAimToTarget(agent, lineup)
+                return true
+            else
+                ps.InitialStopDone = true
+                self:StopPositionAlign()
+            end
         end
 
         local currentPos = agent and agent.Movement and agent.Movement.Position
