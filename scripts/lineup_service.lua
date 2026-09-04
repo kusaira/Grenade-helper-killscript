@@ -6,7 +6,7 @@ local ActionCodec = require("action_codec")
 local MathUtils   = require("math_utils")
 
 local LineupService = {
-    PREROLL_MAX_SPEED = 0.25,
+    PREROLL_MAX_SPEED = 0.15,
     PREROLL_STABLE_TICKS_REQUIRED = 1,
     SETTLE_DELAY_TICKS = 2,
     ActionsDecodeCache = {},
@@ -554,8 +554,8 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
     local speed = math.sqrt(velX * velX + velZ * velZ)
 
-    -- Precision target threshold: 1.5 cm (0.015 m) with low speed (<= 0.25 m/s), or 8 mm (0.008 m) absolute
-    if (distance <= 0.015 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.008 then
+    -- Precision target threshold: 3 mm (0.003 m) with low speed (<= 0.15 m/s), or 1 mm (0.001 m) absolute
+    if (distance <= 0.003 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.001 then
         self:StopPositionAlign()
         return true
     end
@@ -568,13 +568,13 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local nextDz = targetPos.z - nextZ
     local nextDistance = math.sqrt(nextDx * nextDx + nextDz * nextDz)
 
-    -- Active counter-strafing brake ONLY if moving fast (> 0.35 m/s) and overshooting target
+    -- Active counter-strafing brake ONLY if moving fast (> 0.25 m/s) and overshooting target
     local willOvershoot = (nextDistance > distance) and (distance <= 0.05)
-    if willOvershoot and speed > 0.35 then
+    if willOvershoot and speed > 0.25 then
         local brakeX = -(velX * rightX + velZ * rightZ) / math.max(speed, 0.01)
         local brakeY = -(velX * forwardX + velZ * forwardZ) / math.max(speed, 0.01)
         if AgentInput and AgentInput.SetMoveDirection then
-            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * 0.8, brakeY * 0.8))
+            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * 0.5, brakeY * 0.5))
         end
         return false
     end
@@ -583,13 +583,18 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local worldMoveX = dx * rightX + dz * rightZ
     local worldMoveY = dx * forwardX + dz * forwardZ
 
+    if distance < 0.0001 then
+        self:StopPositionAlign()
+        return true
+    end
+
     local unitX = worldMoveX / distance
     local unitY = worldMoveY / distance
 
-    -- Scale speed smoothly with distance (full speed above 10cm, scaling down to 0.40 near target)
+    -- Option 1 (Micro-Stepping): Scale speed proportionally near target to eliminate pendulum effect and achieve sub-3mm lock
     local scale = 1.0
     if distance < 0.10 then
-        scale = math.max(distance / 0.10, 0.40)
+        scale = math.min(distance * 3.0, 0.30)
     end
 
     if AgentInput and AgentInput.SetMoveDirection then
