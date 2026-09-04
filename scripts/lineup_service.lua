@@ -547,41 +547,37 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
     local speed = math.sqrt(velX * velX + velZ * velZ)
 
-    -- Ultra-high precision threshold: 0.001m (1 millimeter)
-    if distance <= 0.001 then
-        if speed <= self.PREROLL_MAX_SPEED then
-            self:StopPositionAlign()
-            return true
-        end
+    -- Precision target threshold: 1 cm (0.01m) with low speed, or absolute 3mm threshold
+    if (distance <= 0.01 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.003 then
+        self:StopPositionAlign()
+        return true
+    end
 
-        -- Micro active braking proportional to current velocity
+    -- Transform world displacement (dx, dz) into local agent space
+    local worldMoveX = dx * rightX + dz * rightZ
+    local worldMoveY = dx * forwardX + dz * forwardZ
+
+    local unitX = worldMoveX / distance
+    local unitY = worldMoveY / distance
+
+    -- Apply full speed for approach (> 5 cm). Only scale down within 5 cm with 0.25 floor to prevent engine friction lock.
+    local scale = 1.0
+    if distance < 0.05 then
+        scale = math.max(distance / 0.05, 0.25)
+    end
+
+    -- Active counter-brake at close range if moving too fast
+    if distance <= 0.02 and speed > self.PREROLL_MAX_SPEED then
         local brakeX = -(velX * rightX + velZ * rightZ) / math.max(speed, 0.01)
         local brakeY = -(velX * forwardX + velZ * forwardZ) / math.max(speed, 0.01)
-        
-        -- Scale down brake vector for smooth sub-unit deceleration
-        local mag = math.min(speed, 1.0)
         if AgentInput and AgentInput.SetMoveDirection then
-            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * mag, brakeY * mag))
+            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * 0.6, brakeY * 0.6))
         end
         return false
     end
 
-    -- Transform world displacement (dx, dz) into local agent space (moveX, moveY)
-    local worldMoveX = dx * rightX + dz * rightZ
-    local worldMoveY = dx * forwardX + dz * forwardZ
-
-    -- Precise proportional input vector scaling
-    -- For distances > 1m, full magnitude 1.0 is used.
-    -- For distances < 1m, sub-unit vector magnitude equal to distance (or proportional gain) is passed directly to SetMoveDirection!
-    local scale = distance < 1.0 and distance or 1.0
-    -- Apply small deadzone compensation scaling so tiny inputs still move the character physics
-    scale = math.max(scale, 0.05)
-    
-    local moveX = (worldMoveX / distance) * scale
-    local moveY = (worldMoveY / distance) * scale
-
     if AgentInput and AgentInput.SetMoveDirection then
-        AgentInput:SetMoveDirection(MathUtils:CreateVector2(moveX, moveY))
+        AgentInput:SetMoveDirection(MathUtils:CreateVector2(unitX * scale, unitY * scale))
     end
     return false
 end
@@ -871,7 +867,7 @@ function LineupService:UpdatePlayback(agent)
             distToTarget = math.sqrt(dx * dx + dz * dz)
         end
 
-        local shouldCrouch = (distToTarget <= 0.25)
+        local shouldCrouch = targetCrouch and (distToTarget <= 0.15)
         if EInputButton and EInputButton.Crouch and AgentInput and AgentInput.SetButtonState then
             AgentInput:SetButtonState(EInputButton.Crouch, shouldCrouch)
         end
