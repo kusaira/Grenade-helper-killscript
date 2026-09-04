@@ -543,27 +543,42 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local rightX   = math.cos(yawRad)
     local rightZ   = -math.sin(yawRad)
 
-    if distance <= 0.02 then
-        local vel = agent.Movement.Velocity
-        local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
-        local speed = math.sqrt(velX * velX + velZ * velZ)
+    local vel = agent.Movement.Velocity
+    local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
+    local speed = math.sqrt(velX * velX + velZ * velZ)
 
+    -- Ultra-high precision threshold: 0.001m (1 millimeter)
+    if distance <= 0.001 then
         if speed <= self.PREROLL_MAX_SPEED then
             self:StopPositionAlign()
             return true
         end
 
-        local brakeX = -(velX * rightX + velZ * rightZ) / speed
-        local brakeY = -(velX * forwardX + velZ * forwardZ) / speed
+        -- Micro active braking proportional to current velocity
+        local brakeX = -(velX * rightX + velZ * rightZ) / math.max(speed, 0.01)
+        local brakeY = -(velX * forwardX + velZ * forwardZ) / math.max(speed, 0.01)
+        
+        -- Scale down brake vector for smooth sub-unit deceleration
+        local mag = math.min(speed, 1.0)
         if AgentInput and AgentInput.SetMoveDirection then
-            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX, brakeY))
+            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * mag, brakeY * mag))
         end
         return false
     end
 
-    local inv = 1.0 / distance
-    local moveX = (dx * rightX + dz * rightZ) * inv
-    local moveY = (dx * forwardX + dz * forwardZ) * inv
+    -- Transform world displacement (dx, dz) into local agent space (moveX, moveY)
+    local worldMoveX = dx * rightX + dz * rightZ
+    local worldMoveY = dx * forwardX + dz * forwardZ
+
+    -- Precise proportional input vector scaling
+    -- For distances > 1m, full magnitude 1.0 is used.
+    -- For distances < 1m, sub-unit vector magnitude equal to distance (or proportional gain) is passed directly to SetMoveDirection!
+    local scale = distance < 1.0 and distance or 1.0
+    -- Apply small deadzone compensation scaling so tiny inputs still move the character physics
+    scale = math.max(scale, 0.05)
+    
+    local moveX = (worldMoveX / distance) * scale
+    local moveY = (worldMoveY / distance) * scale
 
     if AgentInput and AgentInput.SetMoveDirection then
         AgentInput:SetMoveDirection(MathUtils:CreateVector2(moveX, moveY))
