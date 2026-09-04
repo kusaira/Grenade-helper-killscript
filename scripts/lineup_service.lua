@@ -554,10 +554,29 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
     local speed = math.sqrt(velX * velX + velZ * velZ)
 
-    -- Precision target threshold: 1 cm (0.01m) with low speed, or absolute 3mm threshold
-    if (distance <= 0.01 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.003 then
+    -- Precision target threshold: 1 cm with low speed, or 5 mm absolute
+    if (distance <= 0.01 and speed <= self.PREROLL_MAX_SPEED) or distance <= 0.005 then
         self:StopPositionAlign()
         return true
+    end
+
+    -- Predictive next-tick position check (16.67 ms lookahead)
+    local dt = 0.01667
+    local nextX = currentPos.x + velX * dt
+    local nextZ = currentPos.z + velZ * dt
+    local nextDx = targetPos.x - nextX
+    local nextDz = targetPos.z - nextZ
+    local nextDistance = math.sqrt(nextDx * nextDx + nextDz * nextDz)
+
+    -- Active micro-braking if next tick will overshoot or distance is within 1.5 cm and moving fast
+    local willOvershoot = (nextDistance > distance) and (distance <= 0.05)
+    if (distance <= 0.015 or willOvershoot) and speed > self.PREROLL_MAX_SPEED then
+        local brakeX = -(velX * rightX + velZ * rightZ) / math.max(speed, 0.01)
+        local brakeY = -(velX * forwardX + velZ * forwardZ) / math.max(speed, 0.01)
+        if AgentInput and AgentInput.SetMoveDirection then
+            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * 0.8, brakeY * 0.8))
+        end
+        return false
     end
 
     -- Transform world displacement (dx, dz) into local agent space
@@ -567,20 +586,10 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local unitX = worldMoveX / distance
     local unitY = worldMoveY / distance
 
-    -- Apply full speed for approach (> 5 cm). Only scale down within 5 cm with 0.25 floor to prevent engine friction lock.
+    -- Dynamic speed scaling: Full speed > 8 cm, smooth scaling down to 8cm with a 0.35 floor to prevent friction stall
     local scale = 1.0
-    if distance < 0.05 then
-        scale = math.max(distance / 0.05, 0.25)
-    end
-
-    -- Active counter-brake at close range if moving too fast
-    if distance <= 0.02 and speed > self.PREROLL_MAX_SPEED then
-        local brakeX = -(velX * rightX + velZ * rightZ) / math.max(speed, 0.01)
-        local brakeY = -(velX * forwardX + velZ * forwardZ) / math.max(speed, 0.01)
-        if AgentInput and AgentInput.SetMoveDirection then
-            AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX * 0.6, brakeY * 0.6))
-        end
-        return false
+    if distance < 0.08 then
+        scale = math.max(distance / 0.08, 0.35)
     end
 
     if AgentInput and AgentInput.SetMoveDirection then
@@ -867,34 +876,7 @@ function LineupService:UpdatePlayback(agent)
             return true
         end
 
-        -- PHASE 0: Initial Zero-Velocity Brake
-        -- Bring character to 0 speed before starting 1D movement towards standPosition
-        if not ps.InitialStopDone and not forced then
-            local vel = agent and agent.Movement and agent.Movement.Position and agent.Movement.Velocity
-            local velX, velZ = (vel and vel.x or 0), (vel and vel.z or 0)
-            local speed = math.sqrt(velX * velX + velZ * velZ)
 
-            if speed > 0.05 then
-                local lookRot = AgentInput and AgentInput.GetLookRotation and AgentInput:GetLookRotation()
-                local yawRad   = math.rad(lookRot and lookRot.y or 0)
-                local forwardX = math.sin(yawRad)
-                local forwardZ = math.cos(yawRad)
-                local rightX   = math.cos(yawRad)
-                local rightZ   = -math.sin(yawRad)
-
-                local brakeX = -(velX * rightX + velZ * rightZ) / math.max(speed, 0.01)
-                local brakeY = -(velX * forwardX + velZ * forwardZ) / math.max(speed, 0.01)
-
-                if AgentInput and AgentInput.SetMoveDirection then
-                    AgentInput:SetMoveDirection(MathUtils:CreateVector2(brakeX, brakeY))
-                end
-                self:AlignAimToTarget(agent, lineup)
-                return true
-            else
-                ps.InitialStopDone = true
-                self:StopPositionAlign()
-            end
-        end
 
         local currentPos = agent and agent.Movement and agent.Movement.Position
         local targetPos  = lineup and lineup.standPosition
