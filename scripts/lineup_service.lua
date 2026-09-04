@@ -519,7 +519,7 @@ function LineupService:FindActiveLineup(agent, maxDistance, mapName)
 end
 
 function LineupService:AlignAimToTarget(agent, lineup)
-    if not lineup then return end
+    if not lineup then return true end
 
     local pitchVal = lineup.pitch or 0
     local yawVal   = lineup.yaw   or 0
@@ -528,6 +528,17 @@ function LineupService:AlignAimToTarget(agent, lineup)
     if AgentInput and AgentInput.SetLookRotation then
         AgentInput:SetLookRotation(rotVec)
     end
+
+    local lookRot = AgentInput and AgentInput.GetLookRotation and AgentInput:GetLookRotation()
+    if lookRot then
+        local curPitch = lookRot.x or 0
+        local curYaw   = lookRot.y or 0
+        local pitchDiff = math.abs(curPitch - pitchVal)
+        local yawDiff   = MathUtils:AngleDiffDegrees(curYaw, yawVal)
+        local totalDev  = math.sqrt(pitchDiff * pitchDiff + yawDiff * yawDiff)
+        return totalDev <= 0.05
+    end
+    return true
 end
 
 function LineupService:AlignPositionToTarget(agent, lineup)
@@ -591,10 +602,10 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local unitX = worldMoveX / distance
     local unitY = worldMoveY / distance
 
-    -- Option 1 (Micro-Stepping): Scale speed proportionally near target to eliminate pendulum effect and achieve sub-3mm lock
+    -- High-speed sprint approach until 4cm, then swift micro-scaling down to 3mm
     local scale = 1.0
-    if distance < 0.10 then
-        scale = math.min(distance * 3.0, 0.30)
+    if distance < 0.04 then
+        scale = math.max(distance * 7.5, 0.08)
     end
 
     if AgentInput and AgentInput.SetMoveDirection then
@@ -904,8 +915,7 @@ function LineupService:UpdatePlayback(agent)
         end
 
         local reachedPos = self:AlignPositionToTarget(agent, lineup)
-        self:AlignAimToTarget(agent, lineup)
-        local reachedAim = true
+        local reachedAim = self:AlignAimToTarget(agent, lineup)
 
         if forced then
             reachedPos, reachedAim = true, true
