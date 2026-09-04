@@ -591,10 +591,10 @@ function LineupService:AlignPositionToTarget(agent, lineup)
     local unitX = worldMoveX / distance
     local unitY = worldMoveY / distance
 
-    -- High-speed sprint approach until 4cm, then swift micro-scaling down to 3mm
+    -- Full speed approach down to 6cm, then smooth deceleration to 0.20 for sub-3mm lock
     local scale = 1.0
-    if distance < 0.04 then
-        scale = math.max(distance * 7.5, 0.08)
+    if distance < 0.06 then
+        scale = math.max(distance / 0.06, 0.20)
     end
 
     if AgentInput and AgentInput.SetMoveDirection then
@@ -858,7 +858,7 @@ function LineupService:UpdatePlayback(agent)
 
     if not ps.PreRollDone then
         local preRollTicks = ((Time and Time.Tick) or 0) - (ps.LockTick or 0)
-        local forced = preRollTicks > 25
+        local forcedTimeout = preRollTicks > 120
 
         local targetCrouch = self:GetInitialLineupCrouch(lineup)
 
@@ -874,7 +874,7 @@ function LineupService:UpdatePlayback(agent)
 
             local requiredSettle = targetCrouch and 1 or self.SETTLE_DELAY_TICKS
 
-            if (ps.PostAlignSettleTicks >= requiredSettle and (grenadeReady or isThrowable)) or forced then
+            if (ps.PostAlignSettleTicks >= requiredSettle and (grenadeReady or isThrowable)) or forcedTimeout then
                 ps.PreRollDone    = true
                 ps.StartTick      = (Time and Time.Tick) or 0
                 ps.NextEventIndex = 1
@@ -905,8 +905,10 @@ function LineupService:UpdatePlayback(agent)
         self:AlignAimToTarget(agent, lineup)
         local reachedAim = true
 
-        if forced then
-            reachedPos, reachedAim = true, true
+        -- Safety timeout ONLY forces completion if player is already within 1.5 cm (0.015 m) of target
+        local forcedCloseEnough = forcedTimeout or (preRollTicks > 60 and distToTarget <= 0.015)
+        if forcedCloseEnough then
+            reachedPos = true
         end
 
         if reachedPos and reachedAim then
@@ -915,7 +917,7 @@ function LineupService:UpdatePlayback(agent)
             ps.StableTicks = 0
         end
 
-        if ps.StableTicks >= self.PREROLL_STABLE_TICKS_REQUIRED or forced then
+        if ps.StableTicks >= self.PREROLL_STABLE_TICKS_REQUIRED or forcedCloseEnough then
             self:StopPositionAlign()
             ps.PostAlignSettleTicks = 1
         end
