@@ -82,7 +82,7 @@
     color: #FF3B5C;
     font-size: 14px;
     font-weight: bold;
-    text-align: center;
+    -unity-text-align: middle-center;
     border-radius: 6px;
 }
 
